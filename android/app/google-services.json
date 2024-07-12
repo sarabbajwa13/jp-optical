@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "796975223546",
+    "project_id": "rj-brothers-e9d57",
+    "storage_bucket": "rj-brothers-e9d57.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796975223546:android:3b123eff33c0695b96af43",
+        "android_client_info": {
+          "package_name": "com.example.jp_optical"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIPCt5LNHgaE0bl1QJbkkGUS_1PEM1R5Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

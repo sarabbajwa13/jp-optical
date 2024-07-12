@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCB2sC3uPg_kAm5GTX3zGj2oA1MNolM4PU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>796975223546</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.jpOptical</string>
+	<key>PROJECT_ID</key>
+	<string>rj-brothers-e9d57</string>
+	<key>STORAGE_BUCKET</key>
+	<string>rj-brothers-e9d57.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:796975223546:ios:56c3093ba1b4e51a96af43</string>
+</dict>
+</plist>
