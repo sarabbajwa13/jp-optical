@@ -2,14 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:jp_optical/VideoData.dart';
 import 'package:jp_optical/Widgets/MenWomenSectiondivider_label_widget.dart';
 import 'package:jp_optical/Widgets/custom_dialog.dart';
-import 'package:jp_optical/Widgets/login_screen.dart';
+import 'package:jp_optical/Widgets/image_carousel_slider.dart';
 import 'package:jp_optical/Widgets/productItem_widget.dart';
 import 'package:jp_optical/Widgets/redirect_uri.dart';
 import 'package:jp_optical/api/api_service.dart';
@@ -17,21 +19,18 @@ import 'package:jp_optical/colors/app_color.dart';
 import 'package:jp_optical/Widgets/banner_widget.dart';
 import 'package:jp_optical/Widgets/header.dart';
 import 'package:jp_optical/constants/endpoints.dart';
-import 'package:jp_optical/constants/redirection_string.dart';
+import 'package:jp_optical/models/banner_carousel_model.dart';
 import 'package:jp_optical/models/product_item_firebase_model.dart';
-import 'package:jp_optical/models/happy_customer_model.dart';
 import 'package:jp_optical/models/happy_customer_firebase_model.dart';
 import 'package:jp_optical/presentation/cart_screen.dart';
-import 'package:jp_optical/presentation/cloth_list_screen.dart';
+import 'package:jp_optical/presentation/cloth_cateogry_list_screen.dart';
 import 'package:jp_optical/presentation/my_navigation_drawer.dart';
 import 'package:jp_optical/presentation/product_list_screen.dart';
 import 'package:jp_optical/presentation/video_player_screen.dart';
 import 'package:outlined_text/outlined_text.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/cupertino.dart';
 
 class HomeScreenNew extends StatefulWidget {
   const HomeScreenNew({super.key});
@@ -41,75 +40,135 @@ class HomeScreenNew extends StatefulWidget {
 }
 
 class _HomeScreenNewState extends State<HomeScreenNew> {
-  late Future<List<HappyCustomerModel>> happyCustomerData = Future.value([]);
-  List<HappyCustomerModel> happyCustomerList = [];
-
-  Future<void> fetchData() async {
-    try {
-      // Perform the asynchronous work outside of setState
-      final List<HappyCustomerModel> data =
-          await ApiService().fetchHappyCustomerData();
-
-      // Use setState to update the state after the asynchronous work is done
-      setState(() {
-        happyCustomerData = Future.value(data);
-        happyCustomerList = data;
-      });
-    } catch (error) {
-      print('Error fetching data: $error');
-    }
-  }
-
   late Future<List<HappyCustomerFirabaseModel>> happyCustomerFirebaseList;
   late Future<List<ProductItemFirebaseModel>> bestSellerFirebaseList;
   late Future<List<HappyCustomerFirabaseModel>> readyToOrderFirebaseList;
-  late Future<List<ProductItemFirebaseModel>> menProductFirebaseList;
-  late Future<List<ProductItemFirebaseModel>> womenProductFirebaseList;
-  late Future<List<HappyCustomerFirabaseModel>> aboutShopFirebaseVideo;
+  late Future<List<ProductItemFirebaseModel>> menOpticalProductFirebaseList;
+  late Future<List<ProductItemFirebaseModel>> womenOpticalProductFirebaseList;
+  late Future<List<BannerCarouselModel>> bannerCarouselFirebaseList;
+  late Future<List<BannerCarouselModel>> bannerBelowBestSeller;
 
   final ScrollController _scrollController = ScrollController();
   Timer? _autoScrollTimer;
   bool _isUserScrolling = false;
+  final _readyToOrderScrollController = ScrollController();
+  List<HappyCustomerFirabaseModel> _readyToOrderFirebaseList = [];
+  DocumentSnapshot? _lastDoc;
+  bool _isLoading = false, isFirstTime = true;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
+
     _startAutoScroll();
+    _readyToOrderScrollController.addListener(() {
+      if (!_isLoading &&
+          _readyToOrderScrollController.offset ==
+              _readyToOrderScrollController.position.maxScrollExtent) {
+        _fetchProducts(Endpoints.readyToOrderList);
+      }
+    });
     //upload data on firestore
-    // FirebaseFirestore.instance.collection(Endpoints.womenOpticalProductList).add({
-    //   'productId': 'QS234WW',
-    //   'productTitle':'Men Glass New Trendy Stylish',
-    //   'productImage':'https://images.pexels.com/photos/947885/pexels-photo-947885.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    //   'createdBy': Timestamp.now(),
+    // FirebaseFirestore.instance.collection('menJacketList').add({
+    //   'productTitle':'Men Jacket new',
+    //   'productImage':'https://images.vexels.com/media/users/3/234039/isolated/preview/0bb83cedf3679102fae76c6bbb940ccb-denim-jean-jacket.png',
+    //   'createdBy': FieldValue.serverTimestamp(),
     // }).then((value) {
-    //   print("Document successfully written!");
+    //   debugPrint("Document successfully written!");
     // }).catchError((error) {
-    //   print("Error writing document: $error");
+    //   debugPrint("Error writing document: $error");
     // });
 
-    //  FirebaseFirestore.instance.collection(Endpoints.menOpticalProductList).add({
-    //   'productId': 'JH757GG',
-    //   'productTitle':'Women Glass New Trendy Stylish',
-    //   'productImage':'https://images.pexels.com/photos/131018/pexels-photo-131018.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    //   'createdBy': Timestamp.now(),
+    // FirebaseFirestore.instance.collection('readyToOrderList').add({
+    //   'thumbnailUrl':'https://images.pexels.com/photos/925263/pexels-photo-925263.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    //   'videoUrl':'https://videos.pexels.com/video-files/4169233/4169233-sd_360_640_30fps.mp4',
+    //   'createdBy': FieldValue.serverTimestamp(),
     // }).then((value) {
-    //   print("Document successfully written!");
+    //   debugPrint("Document successfully written!");
     // }).catchError((error) {
-    //   print("Error writing document: $error");
+    //   debugPrint("Error writing document: $error");
     // });
 
     happyCustomerFirebaseList =
         ApiService().fetchHappyCustomerListFromFirebase();
     bestSellerFirebaseList = ApiService().fetchBestSellersListFromFirebase();
-    readyToOrderFirebaseList = ApiService().fetchReadyToOrderListFromFirebase();
-    menProductFirebaseList = ApiService().fetchMenProductListFromFirebase();
-    womenProductFirebaseList = ApiService().fetchwomenProductListFromFirebase();
-    aboutShopFirebaseVideo =
-        ApiService().fetchAboutShopFirebaseVideoFromFirebase();
+    // readyToOrderFirebaseList = ApiService().fetchReadyToOrderListFromFirebase();
+    menOpticalProductFirebaseList =
+        ApiService().fetchMenOpticalProductListFromFirebase();
+    womenOpticalProductFirebaseList =
+        ApiService().fetchWomenOpticalProductListFromFirebase();
+    bannerCarouselFirebaseList =
+        ApiService().fetchBannerCarouselListFromFirebase();
+    bannerBelowBestSeller =
+        ApiService().fetchBannerBelowBestSellerFromFirebase();
+    fetchBannerData();
+    _fetchProducts(Endpoints.readyToOrderList);
+  }
+
+  Future<void> _fetchProducts(String collectionName) async {
+    if (_isLoading || !_hasMore) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      Map<String, dynamic> result = await ApiService()
+          .fetchReadyToOrderListFromFirebase(
+              collectionName: collectionName, lastDoc: _lastDoc, limit: 10);
+
+      if (result.containsKey('products') &&
+          result.containsKey('lastDocument')) {
+        List<HappyCustomerFirabaseModel> newProducts = result['products'];
+
+        DocumentSnapshot? lastDocument = result['lastDocument'];
+
+        setState(() {
+          _readyToOrderFirebaseList.addAll(newProducts);
+          _lastDoc = lastDocument;
+          _isLoading = false;
+          _hasMore = newProducts.length == 10;
+          isFirstTime = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  String bannerImageUrl = '', bannerImageUrl2 = '';
+  void fetchBannerData() {
+    bannerBelowBestSeller =
+        ApiService().fetchBannerBelowBestSellerFromFirebase();
+    bannerBelowBestSeller.then((data) {
+      if (data.isNotEmpty) {
+        setState(() {
+          if (data.length > 1) {
+            bannerImageUrl = data[0].banner;
+            bannerImageUrl2 = data[1].banner;
+          } else if (data.length == 1) {
+            bannerImageUrl = data[0].banner;
+            bannerImageUrl2 = '';
+          } else {
+            bannerImageUrl = '';
+            bannerImageUrl2 = '';
+          }
+        });
+      }
+    }).catchError((error) {
+      debugPrint('Error fetching banner data: $error');
+    });
   }
 
   void _startAutoScroll() {
-    _autoScrollTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+    _autoScrollTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!_isUserScrolling) {
         if (_scrollController.hasClients) {
           final maxScrollExtent = _scrollController.position.maxScrollExtent;
@@ -119,7 +178,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
           if (currentScrollPosition < maxScrollExtent) {
             _scrollController.animateTo(
               nextScrollPosition,
-              duration: Duration(milliseconds: 600),
+              duration: Duration(milliseconds: 400),
               curve: Curves.easeInOut,
             );
           } else {
@@ -139,6 +198,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     super.dispose();
     _scrollController.dispose();
     _autoScrollTimer?.cancel();
+    _readyToOrderScrollController.dispose();
     super.dispose();
   }
 
@@ -155,18 +215,15 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     });
   }
 
-  void handleNavigation(String viewMoreFor) {
+  void handleNavigation(String firebaeCollectionName, String routeFrom) {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => Productlistscreen(
-                routeFrom: viewMoreFor,
-                productList: viewMoreFor == 'Men'
-                    ? menProductFirebaseList
-                    : viewMoreFor == 'Women'
-                        ? womenProductFirebaseList
-                        : bestSellerFirebaseList,
-              )),
+        builder: (context) => Productlistscreen(
+          routeFrom: routeFrom,
+          firebaeCollectionName: firebaeCollectionName,
+        ),
+      ),
     );
   }
 
@@ -176,18 +233,49 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
         case 'Close':
           showNavigationDrawer = false;
           break;
-        case 'Men':
+        case 'Men Optical':
           showNavigationDrawer = false;
-          handleNavigation(action);
+          handleNavigation(Endpoints.menOpticalProductList, action);
           break;
-        case 'Women':
+        case 'Women Optical':
           showNavigationDrawer = false;
-          handleNavigation(action);
+          handleNavigation(Endpoints.womenOpticalProductList, action);
           break;
-        case 'Cart':
+        case 'Men cloths':
           showNavigationDrawer = false;
-          dismissCartScreen = true;
-
+          navigateToCategoryListScreen(Endpoints.menClothCategoryList);
+          break;
+        case 'Bags - women, men':
+          showNavigationDrawer = false;
+          _handleBagAndWatchNavigation(Endpoints.menBagProductList);
+          break;
+        case 'Perfumes':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.perfumeProductList, action);
+          break;
+        case 'Watches - women, men':
+          showNavigationDrawer = false;
+          _handleBagAndWatchNavigation(Endpoints.menWatchProductList);
+          break;
+        case 'Belt':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.beltProductList, action);
+          break;
+        case 'Shoe':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.shoeProductList, action);
+          break;
+        case 'Caps':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.capProductList, action);
+          break;
+        case 'Wallets':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.walletProductList, action);
+          break;
+        case 'Other Accessories':
+          showNavigationDrawer = false;
+          handleNavigation(Endpoints.otherAccessoriesProductList, action);
           break;
         default:
           showNavigationDrawer = false;
@@ -227,6 +315,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     switch (action) {
       case 'close':
         Navigator.of(context).pop();
+
         break;
       default:
         Navigator.of(context).pop();
@@ -273,6 +362,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
           showAnimatedDialog(context, data, 'Add to cart');
         }
         break;
+      case 'imageUrl':
+        previewImage(data['imageUrl']);
+        break;
       default:
         if (!dismissCartScreen) {
           showAnimatedDialog(context, data, 'Get details');
@@ -281,18 +373,40 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   }
 
   _handleClickOnClothSection(String action) {
-    navigateToClothListScreen(Endpoints.menClothCategoryList);
+    navigateToCategoryListScreen(Endpoints.menClothCategoryList);
   }
 
-  _handleClickOnOpticalSection(String action) {
-    handleNavigation(action);
-  }
-
-  void navigateToClothListScreen(String collectionName) {
+  _handleBagAndWatchNavigation(String action) {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => ClothListScreen(
+        builder: (context) => Productlistscreen(
+          routeFrom: action == Endpoints.menBagProductList ? 'Bag' : 'Watch',
+          firebaeCollectionName: action,
+        ),
+      ),
+    );
+  }
+
+  _handleClickOnOpticalSection(String action) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Productlistscreen(
+          routeFrom: action == 'Men' ? 'Men Optical' : 'Women Optical',
+          firebaeCollectionName: action == 'Men'
+              ? Endpoints.menOpticalProductList
+              : Endpoints.womenOpticalProductList,
+        ),
+      ),
+    );
+  }
+
+  void navigateToCategoryListScreen(String collectionName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ClothCateogryListScreen(
                 firebaeCollectionName: collectionName,
               )),
     );
@@ -313,6 +427,16 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
         ));
   }
 
+  void previewImage(String imageUrl) {
+    showImageViewer(
+      context,
+      Image.network(imageUrl).image,
+      useSafeArea: true,
+      swipeDismissible: true,
+      doubleTapZoomable: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -323,6 +447,12 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     return Scaffold(
         body: !showNavigationDrawer
             ? Stack(alignment: Alignment.topRight, children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/app_bg.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Header(
                       onClickHamburger: handleOnClickHamburger,
@@ -337,67 +467,206 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                TopBannerBelowHeader(
-                                    tabletView: tabletView,
-                                    desktopView: desktopView,
-                                    mediumTabletView: mediumTabletView,
-                                    handleGetDetailsClick: handleClick),
+                                // TopBannerBelowHeader(
+                                //     tabletView: tabletView,
+                                //     desktopView: desktopView,
+                                //     mediumTabletView: mediumTabletView,
+                                //     handleGetDetailsClick: handleClick),
+                                FutureBuilder<List<BannerCarouselModel>>(
+                                  future: bannerCarouselFirebaseList,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Shimmer.fromColors(
+                                          baseColor: Colors.grey[300]!,
+                                          highlightColor: Colors.grey[100]!,
+                                          child: Container(
+                                            height: desktopView
+                                                ? 500
+                                                : tabletView
+                                                    ? 300
+                                                    : 200,
+                                            width: double.infinity,
+                                            color: Colors.grey[300]!,
+                                          ));
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                          child:
+                                              Text('Error: ${snapshot.error}'));
+                                    } else if (!snapshot.hasData ||
+                                        snapshot.data!.isEmpty) {
+                                      return const Center(
+                                          child: Text('No data available'));
+                                    } else {
+                                      List<String> imageUrls = snapshot.data!
+                                          .map((model) => model.banner)
+                                          .toList();
+                                      return Container(
+                                        child: ImageCarouselSlider(
+                                          items: imageUrls,
+                                          imageHeight: desktopView ? 500 : 200,
+                                          dotColor: Colors.black,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+
                                 MarqueeWidgetbelowTopBanner(
                                     tabletView: tabletView),
-                                HappyCustomerDividerAndLabel(
-                                    tabletView: tabletView,
-                                    desktopView: desktopView),
-                                FutureBuilder<List<HappyCustomerFirabaseModel>>(
-                                    future: happyCustomerFirebaseList,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Shimmer.fromColors(
-                                            baseColor: Colors.grey[300]!,
-                                            highlightColor: Colors.grey[100]!,
-                                            child: Container(
-                                              width: desktopView
-                                                  ? 365
-                                                  : tabletView
-                                                      ? 165
-                                                      : 365,
-                                              height: desktopView
-                                                  ? 620
-                                                  : tabletView
-                                                      ? 500
-                                                      : 620,
-                                              color: Colors.grey[300]!,
-                                            ));
-                                      } else if (snapshot.hasError) {
-                                        return Center(
-                                            child: Text(
-                                                'Error: ${snapshot.error}'));
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data!.isEmpty) {
-                                        return const Center(
-                                            child: Text('No data found'));
-                                      } else {
-                                        return HappyCustomerVideoAndGridWidget(
-                                            tabletView: tabletView,
-                                            desktopView: desktopView,
-                                            happyCustomerData:
-                                                snapshot.data ?? [],
-                                            onClickVideo:
-                                                navigateToVideoPlayerScreen,
-                                            playIconWidget:
-                                                playIconWidget(false));
-                                      }
-                                    }),
+                                const SizedBox(height: 20),
+                                ReadyToOrderDividerAndLabel(
+                                    tabletView: tabletView),
+                                SizedBox(height: tabletView ? 50 : 0),
+
+                                // glassLabelImage(),
+                                Container(
+                                    margin: EdgeInsets.only(
+                                        right: tabletView ? 60 : 10,
+                                        left: tabletView ? 60 : 10),
+                                    width: double.infinity,
+                                    child: SizedBox(
+                                        height: desktopView ? 550 : 300,
+                                        child: SingleChildScrollView(
+                                          controller:
+                                              _readyToOrderScrollController,
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            children: List.generate(
+                                                _readyToOrderFirebaseList
+                                                        .length +
+                                                    (_hasMore ? 1 : 0),
+                                                (index) {
+                                              if (index ==
+                                                  _readyToOrderFirebaseList
+                                                      .length) {
+                                                return isFirstTime
+                                                    ? Shimmer.fromColors(
+                                                        baseColor: Colors
+                                                            .grey[300]!,
+                                                        highlightColor: Colors
+                                                            .grey[100]!,
+                                                        child: Container(
+                                                          width: desktopView
+                                                              ? 365
+                                                              : tabletView
+                                                                  ? 165
+                                                                  : 365,
+                                                          height: desktopView
+                                                              ? 620
+                                                              : tabletView
+                                                                  ? 500
+                                                                  : 320,
+                                                          color:
+                                                              Colors.grey[300]!,
+                                                        ))
+                                                    : Center(
+                                                        child: Container(
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    left: 10),
+                                                            child: const CircularProgressIndicator(
+                                                                valueColor:
+                                                                    AlwaysStoppedAnimation<
+                                                                            Color>(
+                                                                        AppColors
+                                                                            .cGreenColor))));
+                                              }
+                                              return Container(
+                                                width: desktopView ? 350 : 200,
+                                                height: double.infinity,
+                                                child: GestureDetector(
+                                                  onTap: () => {
+                                                    navigateToVideoPlayerScreen(
+                                                        _readyToOrderFirebaseList[
+                                                                index]
+                                                            .videoUrl)
+                                                  },
+                                                  child: MouseRegion(
+                                                    cursor: SystemMouseCursors
+                                                        .click,
+                                                    child: Stack(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      children: [
+                                                        Container(
+                                                          width: 350,
+                                                          height:
+                                                              double.infinity,
+                                                          margin: EdgeInsets
+                                                              .fromLTRB(
+                                                            0,
+                                                            20,
+                                                            index ==
+                                                                    _readyToOrderFirebaseList
+                                                                            .length -
+                                                                        1
+                                                                ? 0
+                                                                : 10,
+                                                            0,
+                                                          ),
+                                                          child: Image.network(
+                                                            _readyToOrderFirebaseList[
+                                                                    index]
+                                                                .thumbnailUrl,
+                                                            fit: BoxFit.fill,
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          width: desktopView
+                                                              ? 60
+                                                              : 35,
+                                                          height: desktopView
+                                                              ? 60
+                                                              : 35,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        50),
+                                                            border: Border.all(
+                                                                width: 2,
+                                                                color: Colors
+                                                                    .black),
+                                                          ),
+                                                          child: Icon(
+                                                            Icons.play_arrow,
+                                                            color: Colors.black,
+                                                            size: desktopView
+                                                                ? 50
+                                                                : 25,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                        ))),
                                 tabletView
                                     ? Container()
                                     : const SizedBox(height: 20),
-                                CategoryLabel(tabletView: tabletView),
+                                CategoryLabel(
+                                  tabletView: tabletView,
+                                  label: 'Opticals',
+                                ),
                                 MenWomenContainerBelowCategory(
                                   tabletView: tabletView,
                                   desktopView: desktopView,
                                   onClickCallBack: _handleClickOnOpticalSection,
                                 ),
-                                const SizedBox(height: 20),
+
+                                CategoryLabel(
+                                  tabletView: tabletView,
+                                  label:
+                                      'Also Try out our Clothing and Accessory',
+                                ),
+
                                 MenClothBanner(
                                   tabletView: tabletView,
                                   desktopView: desktopView,
@@ -406,21 +675,27 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                 const SizedBox(height: 20),
                                 BestSellersLabel(tabletView: tabletView),
                                 SizedBox(height: tabletView ? 50 : 20),
-                                GestureDetector(
-                                    onPanDown: (_) {
-                                      _isUserScrolling = true;
-                                      _stopAutoScroll();
-                                    },
-                                    onPanEnd: (_) {
-                                      Future.delayed(const Duration(seconds: 3), () {
-                                        if (!_isUserScrolling) {
-                                          _isUserScrolling = false;
-                                          _startAutoScroll();
-                                        }
-                                      });
+                                NotificationListener<ScrollNotification>(
+                                    onNotification:
+                                        (ScrollNotification scrollInfo) {
+                                      if (scrollInfo
+                                          is ScrollStartNotification) {
+                                        _isUserScrolling = true;
+                                        _stopAutoScroll();
+                                      } else if (scrollInfo
+                                          is ScrollEndNotification) {
+                                        Future.delayed(
+                                            const Duration(seconds: 3), () {
+                                          if (_isUserScrolling) {
+                                            _isUserScrolling = false;
+                                            _startAutoScroll();
+                                          }
+                                        });
+                                      }
+                                      return true;
                                     },
                                     child: Container(
-                                      height: desktopView ? 590 : 450,
+                                      height: desktopView ? 590 : 470,
                                       margin: EdgeInsets.only(
                                           left: tabletView ? 50 : 10,
                                           right: tabletView ? 50 : 10),
@@ -471,60 +746,54 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                 itemBuilder: (context, index) {
                                                   // Check if the current index is 50
                                                   if (index == 9) {
-                                                    return GestureDetector(
-                                                        onTap: () {
-                                                          // Handle the click event for the custom widget
-                                                          print('sarab wah');
-                                                        },
-                                                        child: Center(
-                                                            child:
-                                                                GestureDetector(
-                                                          onTap: () => {
-                                                            handleNavigation(
-                                                                'Best Seller')
-                                                          },
-                                                          child: MouseRegion(
-                                                            cursor:
-                                                                SystemMouseCursors
-                                                                    .click,
-                                                            child: Container(
-                                                              height:
-                                                                  desktopView
-                                                                      ? 100
-                                                                      : 50,
-                                                              width: desktopView
-                                                                  ? 150
-                                                                  : 100,
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              8),
+                                                    return Center(
+                                                        child: GestureDetector(
+                                                      onTap: () => {
+                                                        handleNavigation(
+                                                            Endpoints
+                                                                .bestSellersList,
+                                                            'Best Seller')
+                                                      },
+                                                      child: MouseRegion(
+                                                        cursor:
+                                                            SystemMouseCursors
+                                                                .click,
+                                                        child: Container(
+                                                          height: desktopView
+                                                              ? 100
+                                                              : 50,
+                                                          width: desktopView
+                                                              ? 150
+                                                              : 100,
+                                                          alignment:
+                                                              Alignment.center,
+                                                          decoration: BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8),
+                                                              color:
+                                                                  Colors.white,
+                                                              border: Border.all(
+                                                                  width: 1,
                                                                   color: Colors
-                                                                      .white,
-                                                                  border: Border.all(
-                                                                      width: 1,
-                                                                      color: Colors
-                                                                          .grey)),
-                                                              child: Text(
-                                                                'View more >',
-                                                                style: GoogleFonts.outfit(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    fontSize:
-                                                                        desktopView
-                                                                            ? 20
-                                                                            : 15,
-                                                                    color: Colors
-                                                                        .black),
-                                                              ),
-                                                            ),
+                                                                      .grey)),
+                                                          child: Text(
+                                                            'View more >',
+                                                            style: GoogleFonts.outfit(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize:
+                                                                    desktopView
+                                                                        ? 20
+                                                                        : 12,
+                                                                color: Colors
+                                                                    .black),
                                                           ),
-                                                        )));
+                                                        ),
+                                                      ),
+                                                    ));
                                                   } else {
                                                     int adjustedIndex =
                                                         index > 50
@@ -550,68 +819,68 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                           }),
                                     )),
                                 SizedBox(height: 30),
-                                BannerWidget(
+
+                                bannerImageUrl2.isEmpty
+                                    ? Container()
+                                    : BannerWidget(
+                                        tabletView: tabletView,
+                                        desktopView: desktopView,
+                                        imageUrl: bannerImageUrl2,
+                                      ),
+                                SizedBox(height: 30),
+                                bannerImageUrl.isEmpty
+                                    ? Container()
+                                    : BannerWidget(
+                                        tabletView: tabletView,
+                                        desktopView: desktopView,
+                                        imageUrl: bannerImageUrl,
+                                      ),
+                                SizedBox(height: tabletView ? 50 : 20),
+                                HappyCustomerDividerAndLabel(
                                     tabletView: tabletView,
                                     desktopView: desktopView),
-                                SizedBox(height: tabletView ? 50 : 20),
-                                ReadyToOrderDividerAndLabel(
-                                    tabletView: tabletView),
-                                SizedBox(height: tabletView ? 50 : 0),
-                                Stack(
-                                  alignment: Alignment.bottomCenter,
-                                  children: [
-                                    // glassLabelImage(),
-                                    Container(
-                                        margin: EdgeInsets.only(
-                                            right: tabletView ? 60 : 10,
-                                            left: tabletView ? 60 : 10),
-                                        width: double.infinity,
-                                        child: FutureBuilder<
-                                                List<
-                                                    HappyCustomerFirabaseModel>>(
-                                            future: readyToOrderFirebaseList,
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.waiting) {
-                                                return Shimmer.fromColors(
-                                                    baseColor:
-                                                        Colors.grey[300]!,
-                                                    highlightColor:
-                                                        Colors.grey[100]!,
-                                                    child: Container(
-                                                      width: desktopView
-                                                          ? 365
-                                                          : tabletView
-                                                              ? 165
-                                                              : 365,
-                                                      height: desktopView
-                                                          ? 620
-                                                          : tabletView
-                                                              ? 500
-                                                              : 620,
-                                                      color: Colors.grey[300]!,
-                                                    ));
-                                              } else if (snapshot.hasError) {
-                                                return Center();
-                                              } else if (!snapshot.hasData ||
-                                                  snapshot.data!.isEmpty) {
-                                                return Center();
-                                              } else {
-                                                return ReadyToOrderListWidget(
-                                                  videoWidth:
-                                                      tabletView ? 296 : 188,
-                                                  videoHeight:
-                                                      tabletView ? 573 : 283,
-                                                  happyCustomerData:
-                                                      snapshot.data ?? [],
-                                                  onClickVideo:
-                                                      navigateToVideoPlayerScreen,
-                                                  desktopView: desktopView,
-                                                );
-                                              }
-                                            }))
-                                  ],
-                                ),
+                                FutureBuilder<List<HappyCustomerFirabaseModel>>(
+                                    future: happyCustomerFirebaseList,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return Shimmer.fromColors(
+                                            baseColor: Colors.grey[300]!,
+                                            highlightColor: Colors.grey[100]!,
+                                            child: Container(
+                                              width: desktopView
+                                                  ? 365
+                                                  : tabletView
+                                                      ? 165
+                                                      : 365,
+                                              height: desktopView
+                                                  ? 620
+                                                  : tabletView
+                                                      ? 500
+                                                      : 620,
+                                              color: Colors.grey[300]!,
+                                            ));
+                                      } else if (snapshot.hasError) {
+                                        return Center(
+                                            child: Text(
+                                                'Error: ${snapshot.error}'));
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return const Center(
+                                            child: Text('No data found'));
+                                      } else {
+                                        return HappyCustomerVideoAndGridWidget(
+                                            tabletView: tabletView,
+                                            desktopView: desktopView,
+                                            happyCustomerData:
+                                                snapshot.data ?? [],
+                                            onClickVideo:
+                                                navigateToVideoPlayerScreen,
+                                            playIconWidget:
+                                                playIconWidget(false));
+                                      }
+                                    }),
+
                                 SizedBox(height: tabletView ? 40 : 20),
                                 MenWomenSectionDividerLabelWidget(
                                   label: 'Men',
@@ -620,9 +889,10 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   tabletView: tabletView,
+                                  routeFromHome: true,
                                 ),
                                 FutureBuilder<List<ProductItemFirebaseModel>>(
-                                    future: menProductFirebaseList,
+                                    future: menOpticalProductFirebaseList,
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState ==
                                           ConnectionState.waiting) {
@@ -664,18 +934,24 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                   onViewMoreClick: handleNavigation,
                                 ),
                                 const SizedBox(height: 60),
+                                CategoryLabel(
+                                  tabletView: tabletView,
+                                  label: 'Brands we offer',
+                                ),
                                 BuyBrandedSunglassesBanner(
                                     tabletView: tabletView),
                                 const SizedBox(height: 20),
                                 MenWomenSectionDividerLabelWidget(
-                                    label: 'Women',
-                                    label2: 'Section',
-                                    margin: EdgeInsets.only(right: 50),
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    tabletView: tabletView),
+                                  label: 'Women',
+                                  label2: 'Section',
+                                  margin: EdgeInsets.only(right: 50),
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  tabletView: tabletView,
+                                  routeFromHome: true,
+                                ),
                                 FutureBuilder<List<ProductItemFirebaseModel>>(
-                                    future: womenProductFirebaseList,
+                                    future: womenOpticalProductFirebaseList,
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState ==
                                           ConnectionState.waiting) {
@@ -722,15 +998,13 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                     mediumTabletView: mediumTabletView,
                                     mobileView: mobileView,
                                     desktopView: desktopView,
-                                    happyCustomerFirebaseList:
-                                        aboutShopFirebaseVideo,
                                     onClickVideo: navigateToVideoPlayerScreen,
                                     playIconWidget:
                                         playIconWidget(desktopView)),
                                 SizedBox(height: tabletView ? 80 : 30),
-                                StoreLocationMapWidget(
-                                    tabletView: tabletView,
-                                    desktopView: desktopView),
+                                // StoreLocationMapWidget(
+                                //     tabletView: tabletView,
+                                //     desktopView: desktopView),
                                 const SizedBox(height: 60),
                                 const Footer(),
                                 const SizedBox(height: 20),
@@ -1156,7 +1430,7 @@ class HappyCustomerDividerAndLabel extends StatelessWidget {
                   )
                 : Container(),
             Text(
-              'Happy Customer',
+              'Happy Customers',
               style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w600,
                   fontSize: tabletView ? 32 : 20,
@@ -1189,13 +1463,6 @@ class HappyCustomerVideoAndGridWidget extends StatefulWidget {
 
 class _HappyCustomerVideoAndGridWidgetState
     extends State<HappyCustomerVideoAndGridWidget> {
-  // late VideoPlayerController _controllers;
-
-  // String currentVideoUrl =
-  //     'https://videos.pexels.com/video-files/4812205/4812205-hd_1080_1920_30fps.mp4';
-
-  List<VideoData> videoDataList = [];
-
   Future<void> _updateVideoUrl(String videoUrl, bool videoChanged) async {
     if (widget.happyCustomerData.isNotEmpty) {
       if (videoChanged) widget.onClickVideo(videoUrl);
@@ -1205,39 +1472,12 @@ class _HappyCustomerVideoAndGridWidgetState
   @override
   void initState() {
     super.initState();
-    // _controllers =
-    //     VideoPlayerController.network(widget.happyCustomerData[0].videoUrl);
-    // _controllers.addListener(() {
-    //   setState(() {});
-    // });
-    // _controllers.initialize().then((_) {
-    //   setState(() {
-    //     _controllerInitialized = true;
-    //   });
-    // });
-    // }
-    // _initializeVideoDataList();
-    // _updateVideoUrl(currentVideoUrl, false);
   }
 
   @override
   void dispose() {
     super.dispose();
   }
-
-  //   _playVideo(String videoUrl) {
-  //    navigateToVideoPlayerScreen(videoUrl);
-  //   // setState(() {
-  //   //   if (_controllers.value.isPlaying) {
-  //   //     _controllers.pause();
-  //   //     _controllers.seekTo(Duration.zero);
-  //   //   } else {
-  //   //     _controllers.play();
-  //   //   }
-  //   // });
-  // }
-
-  static const gridImageHeight = 108.0;
 
   Widget imageContainer(String videoUrl, String thumbnailUrl) {
     return GestureDetector(
@@ -1255,7 +1495,7 @@ class _HappyCustomerVideoAndGridWidgetState
             child: Stack(alignment: Alignment.center, children: [
               Image.network(
                 thumbnailUrl,
-                fit: BoxFit.cover,
+                fit: BoxFit.fitHeight,
                 loadingBuilder: (BuildContext context, Widget child,
                     ImageChunkEvent? loadingProgress) {
                   if (loadingProgress == null) {
@@ -1305,8 +1545,6 @@ class _HappyCustomerVideoAndGridWidgetState
                   videoDataList[index].thumbnailUrl,
                 )));
   }
-
-  bool _controllerInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1375,7 +1613,7 @@ class _HappyCustomerVideoAndGridWidgetState
             ),
           )
         : Container(
-            margin: EdgeInsets.only(right: 10, left: 10),
+            margin: const EdgeInsets.only(right: 10, left: 10),
             width: double.infinity,
             child: ReadyToOrderListWidget(
                 videoWidth: 188,
@@ -1388,8 +1626,10 @@ class _HappyCustomerVideoAndGridWidgetState
 
 class CategoryLabel extends StatelessWidget {
   final bool tabletView;
+  final String label;
 
-  const CategoryLabel({Key? key, required this.tabletView}) : super(key: key);
+  const CategoryLabel({Key? key, required this.tabletView, required this.label})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -1397,10 +1637,16 @@ class CategoryLabel extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Category',
+          label,
           style: GoogleFonts.outfit(
               fontWeight: FontWeight.w600,
-              fontSize: tabletView ? 32 : 20,
+              fontSize: tabletView
+                  ? 32
+                  : label == 'Opticals'
+                      ? 20
+                      : label == 'Brands we offer'
+                          ? 20
+                          : 15,
               color: AppColors.cGreenColor),
         ),
       ],
@@ -1432,32 +1678,34 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
                       onTap: () => {onClickCallBack('Men')},
-                      child: Stack(alignment: Alignment.bottomLeft, children: [
+                      child: Stack(alignment: Alignment.bottomRight, children: [
                         Container(
                             height: desktopView
                                 ? 350
                                 : tabletView
                                     ? 250
                                     : 120,
-                            width: double.infinity,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.asset(
-                                  'assets/images/men_banner.png',
+                                  'assets/images/men_banner.jpeg',
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.fill,
                                 ))),
                         Container(
-                          padding: const EdgeInsets.only(
-                              left: 40, right: 40, top: 5, bottom: 5),
+                          padding: EdgeInsets.only(
+                              left: desktopView ? 40 : 20,
+                              right: desktopView ? 40 : 20,
+                              top: 5,
+                              bottom: 5),
                           decoration: const BoxDecoration(
                               color: AppColors.cGreenColor,
                               borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(8),
-                                  bottomLeft: Radius.circular(8))),
+                                  topLeft: Radius.circular(8),
+                                  bottomRight: Radius.circular(8))),
                           child: Text(
                             'Men',
                             style: GoogleFonts.poppins(
@@ -1467,15 +1715,15 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
                           ),
                         )
                       ])))),
-          const SizedBox(
-            width: 30,
+          SizedBox(
+            width: desktopView ? 30 : 10,
           ),
           Expanded(
               child: MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
                 onTap: () => {onClickCallBack('Women')},
-                child: Stack(alignment: Alignment.bottomLeft, children: [
+                child: Stack(alignment: Alignment.bottomRight, children: [
                   Container(
                       height: desktopView
                           ? 350
@@ -1498,8 +1746,8 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
                     decoration: const BoxDecoration(
                         color: AppColors.cGreenColor,
                         borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(8),
-                            bottomLeft: Radius.circular(8))),
+                            topLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8))),
                     child: Text(
                       'Women',
                       style: GoogleFonts.poppins(
@@ -1551,9 +1799,9 @@ class MenClothBanner extends StatelessWidget {
                       child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
-                            'assets/images/men_cloth_banner.jpg',
+                            'assets/images/men_cloth_banner.png',
                             width: double.infinity,
-                            fit: BoxFit.fitWidth,
+                            fit: BoxFit.fitHeight,
                           ))),
                   Container(
                     padding: EdgeInsets.only(
@@ -1598,7 +1846,7 @@ class BestSellersLabel extends StatelessWidget {
                   fontSize: tabletView ? 32 : 20,
                   height: 1.2),
               children: <TextSpan>[
-                TextSpan(text: 'Best '),
+                const TextSpan(text: 'Best '),
                 TextSpan(
                   text: 'Sellers',
                   style: TextStyle(
@@ -1614,7 +1862,7 @@ class BestSellersLabel extends StatelessWidget {
             width: tabletView ? 20 : 5,
           ),
           Container(
-            margin: EdgeInsets.only(top: 18),
+            margin: const EdgeInsets.only(top: 18),
             color: AppColors.cGreenColor,
             width: 1,
             height: tabletView ? 50 : 30,
@@ -1658,10 +1906,10 @@ class ReadyToOrderDividerAndLabel extends StatelessWidget {
                 style: GoogleFonts.outfit(
                     color: AppColors.cGreenColor,
                     fontWeight: FontWeight.w600,
-                    fontSize: tabletView ? 32 : 10,
+                    fontSize: tabletView ? 32 : 12,
                     height: 1.2),
                 children: <TextSpan>[
-                  TextSpan(text: 'Ready To '),
+                  const TextSpan(text: 'Ready To '),
                   TextSpan(
                     text: 'Order',
                     style: TextStyle(
@@ -1707,88 +1955,14 @@ class ReadyToOrderListWidget extends StatefulWidget {
 }
 
 class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
-  List<HappyCustomerModel> fetchList = [];
-  late List<VideoPlayerController> _controllers = [];
-  late ScrollController _scrollController;
-  late int _currentlyPlayingIndex = -1;
-
-  void fetchHappyCustomerData() {
-    setState(() {
-      List<String> videoUrls =
-          widget.happyCustomerData.map((e) => e.videoUrl).toList();
-      _controllers =
-          videoUrls.map((url) => VideoPlayerController.network(url)).toList();
-      for (var controller in _controllers) {
-        controller.addListener(() {
-          setState(() {});
-        });
-        controller.initialize().then((_) {
-          setState(() {});
-        });
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    fetchHappyCustomerData();
-    _scrollController = ScrollController();
   }
 
   @override
   void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
     super.dispose();
-  }
-
-  void scrollLeft() {
-    double targetOffset =
-        _scrollController.offset - MediaQuery.of(context).size.width;
-    targetOffset =
-        targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent);
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void scrollRight() {
-    double targetOffset =
-        _scrollController.offset + MediaQuery.of(context).size.width;
-
-    targetOffset =
-        targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent);
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void playVideo(int index) {
-    if (index == _currentlyPlayingIndex) {
-      if (_controllers[index].value.isPlaying) {
-        _controllers[index].pause();
-        _controllers[index].seekTo(Duration.zero);
-      } else {
-        _controllers[index].play();
-      }
-    } else {
-      if (_currentlyPlayingIndex != -1) {
-        _controllers[_currentlyPlayingIndex].pause();
-        _controllers[_currentlyPlayingIndex].seekTo(Duration.zero);
-      }
-      _controllers[index].play();
-      setState(() {
-        _currentlyPlayingIndex = index;
-      });
-    }
   }
 
   @override
@@ -1797,17 +1971,9 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
       width: widget.videoWidth,
       height: widget.videoHeight,
       child: ListView.builder(
-        controller: _scrollController,
         scrollDirection: Axis.horizontal,
         itemCount: widget.happyCustomerData.length,
         itemBuilder: (context, index) {
-          var controller = _controllers[index];
-          double aspectRatio = controller.value.aspectRatio;
-          double containerHeight = 350;
-          if (aspectRatio != null && aspectRatio > 0) {
-            containerHeight = 400.0 / aspectRatio;
-          }
-
           return GestureDetector(
               onTap: () => {
                     widget
@@ -1818,7 +1984,7 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
                 child: Stack(alignment: Alignment.center, children: [
                   Container(
                     width: widget.videoWidth == 188 ? 160 : 350,
-                    height: containerHeight,
+                    height: double.infinity,
                     margin: EdgeInsets.fromLTRB(
                       0,
                       20,
@@ -1866,7 +2032,6 @@ class MenSectionGridWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         width: double.infinity,
-        //  height: desktopView ? 1000 : null,
         margin: EdgeInsets.only(
             left: tabletView ? 40 : 10, right: tabletView ? 40 : 10),
         child: ResponsiveGridList(
@@ -1876,13 +2041,13 @@ class MenSectionGridWidget extends StatelessWidget {
           verticalGridMargin: 5,
           minItemWidth: 100,
           minItemsPerRow: 1,
-          maxItemsPerRow: desktopView ? 2 : 1,
+          maxItemsPerRow: tabletView ? 2 : 1,
           listViewBuilderOptions: ListViewBuilderOptions(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
           ),
           children: List.generate(
-              desktopView ? 4 : 2,
+              productFirebaseList.length > 4 ? 4 : productFirebaseList.length,
               (index) => ProductItemWidget(
                     tabletView: tabletView,
                     mediumTabletView: mediumTabletView,
@@ -1899,7 +2064,7 @@ class MenSectionGridWidget extends StatelessWidget {
 class MenSectionViewMore extends StatelessWidget {
   final String viewMoreFor;
   final bool tabletView;
-  final ValueChanged<String> onViewMoreClick;
+  final void Function(String, String) onViewMoreClick;
 
   const MenSectionViewMore(
       {Key? key,
@@ -1916,7 +2081,11 @@ class MenSectionViewMore extends StatelessWidget {
         alignment: Alignment.center,
         child: ElevatedButton(
             onPressed: () {
-              onViewMoreClick(viewMoreFor);
+              String firebaseCollectionName = viewMoreFor == 'Men'
+                  ? Endpoints.menOpticalProductList
+                  : Endpoints.womenOpticalProductList;
+              onViewMoreClick(firebaseCollectionName,
+                  viewMoreFor == 'Men' ? 'Men Optical' : 'Women Optical');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.cGreenColor,
@@ -1940,12 +2109,6 @@ class MenSectionViewMore extends StatelessWidget {
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: tabletView ? 20 : 16)),
-                    // const SizedBox(width: 10),
-                    // Icon(
-                    //   Icons.arrow_drop_down,
-                    //   color: Colors.white,
-                    //   size: 30,
-                    // )
                   ],
                 ))));
   }
@@ -1959,12 +2122,12 @@ class BuyBrandedSunglassesBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10),
+        padding: const EdgeInsets.only(left: 20, right: 20),
         child: Image.asset(
           'assets/images/buy_branded_sunglasses_banner.png',
           width: double.infinity,
-          height: tabletView ? 800 : 212,
-          fit: BoxFit.contain,
+          height: tabletView ? 650 : 180,
+          fit: BoxFit.fill,
         ));
   }
 }
@@ -1972,7 +2135,6 @@ class BuyBrandedSunglassesBanner extends StatelessWidget {
 class AboutJpOpticalWidget extends StatefulWidget {
   final bool tabletView, mediumTabletView, mobileView, desktopView;
   final ValueChanged<String> onClickVideo;
-  final Future<List<HappyCustomerFirabaseModel>> happyCustomerFirebaseList;
   final Widget playIconWidget;
   const AboutJpOpticalWidget(
       {Key? key,
@@ -1981,7 +2143,6 @@ class AboutJpOpticalWidget extends StatefulWidget {
       required this.mobileView,
       required this.desktopView,
       required this.onClickVideo,
-      required this.happyCustomerFirebaseList,
       required this.playIconWidget})
       : super(key: key);
 
@@ -1991,71 +2152,17 @@ class AboutJpOpticalWidget extends StatefulWidget {
 
 class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
   bool comingFirstTime = true;
-  late VideoPlayerController _controllers;
-  bool _controllerInitialized = false;
-  String currentVideoUrl =
-      'https://firebasestorage.googleapis.com/v0/b/rj-brothers-e9d57.appspot.com/o/4752391-sd_356_640_25fps.mp4?alt=media&token=9ca6006b-a6bf-43b6-9ec1-0a70d8c9f250';
-  String thumbnailUrl =
-      'https://firebasestorage.googleapis.com/v0/b/rj-brothers-e9d57.appspot.com/o/pexels-nitin-creative-249210.jpg?alt=media&token=44291861-c402-49b0-9a34-0aaca3fc35e4';
-
-  // void _updateVideoUrl(String videoUrl, bool videoChanged) {
-  //   setState(() {
-  //     currentVideoUrl = videoUrl;
-  //     _controllers = VideoPlayerController.network(currentVideoUrl);
-
-  //     _controllers.addListener(() {
-  //       setState(() {});
-  //     });
-  //     _controllers.initialize().then((_) {
-  //       setState(() {
-  //         if (videoChanged) _controllers.play();
-  //       });
-  //     });
-  //   });
-  // }
 
   @override
   void initState() {
     super.initState();
-    if (!_controllerInitialized) {
-      // _controllers = VideoPlayerController.network(
-      //     snapshot.data![0].videoUrl);
-      _controllers = VideoPlayerController.network(currentVideoUrl);
-      _controllers.addListener(() {
-        setState(() {});
-      });
-      _controllers.initialize().then((_) {
-        setState(() {
-          _controllerInitialized = true;
-        });
-      });
-    }
-    // _updateVideoUrl(currentVideoUrl, false);
   }
 
   @override
   void dispose() {
-    _controllers.dispose();
-
     super.dispose();
   }
 
-  void _playVideo() {
-    setState(() {
-      if (_controllers.value.isPlaying) {
-        _controllers.pause();
-        _controllers.seekTo(Duration.zero);
-      } else {
-        _controllers.play();
-      }
-    });
-  }
-
-  final FlickManager flickManager = FlickManager(
-    videoPlayerController: VideoPlayerController.network(
-      'https://firebasestorage.googleapis.com/v0/b/rj-brothers-e9d57.appspot.com/o/4752391-sd_356_640_25fps.mp4?alt=media&token=9ca6006b-a6bf-43b6-9ec1-0a70d8c9f250',
-    ),
-  );
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -2068,92 +2175,94 @@ class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
       ),
       padding: EdgeInsets.only(
           top: widget.tabletView ? 40 : 20,
-          bottom: widget.tabletView ? 40 : 20),
+          bottom: widget.tabletView ? 40 : 20,
+          right: 20,
+          left: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          FutureBuilder<List<HappyCustomerFirabaseModel>>(
-              future: widget.happyCustomerFirebaseList,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      child: Container(
-                        width: widget.desktopView
-                            ? 320
-                            : widget.tabletView
-                                ? 250
-                                : 188,
-                        height: widget.tabletView ? 400 : 283,
-                        color: Colors.grey[300]!,
-                      ));
-                } else if (snapshot.hasError) {
-                  return Center(
-                      child: Container(
-                    alignment: Alignment.center,
-                    color: Colors.grey,
-                    width: widget.desktopView
-                        ? 320
-                        : widget.tabletView
-                            ? 250
-                            : 188,
-                    height: widget.tabletView ? 400 : 283,
-                    child: Text(
-                      'Something went wrong...',
-                      style: GoogleFonts.outfit(color: Colors.white),
-                    ),
-                  ));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                      child: Container(
-                    alignment: Alignment.center,
-                    color: Colors.grey,
-                    width: widget.desktopView
-                        ? 320
-                        : widget.tabletView
-                            ? 250
-                            : 188,
-                    height: widget.tabletView ? 400 : 283,
-                    child: Text(
-                      'No data found!',
-                      style: GoogleFonts.outfit(color: Colors.white),
-                    ),
-                  ));
-                } else {
-                  return GestureDetector(
-                      onTap: () =>
-                          {widget.onClickVideo(snapshot.data![0].videoUrl)},
-                      child: Stack(alignment: Alignment.center, children: [
-                        Container(
-                          margin: EdgeInsets.only(
-                              left: widget.desktopView ? 60 : 10),
-                          width: widget.desktopView
-                              ? 320
-                              : widget.tabletView
-                                  ? 250
-                                  : 180,
-                          height: widget.tabletView ? 400 : 283,
-                          child: Image.network(
-                            snapshot.data![0].thumbnailUrl,
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                        Container(
-                            margin: EdgeInsets.only(
-                                left: widget.desktopView ? 60 : 10),
-                            child: widget.playIconWidget)
-                      ]));
-                }
-              }),
-          SizedBox(
-            width: widget.desktopView
-                ? 80
-                : widget.tabletView
-                    ? 30
-                    : 10,
-          ),
+          // FutureBuilder<List<HappyCustomerFirabaseModel>>(
+          //     future: widget.happyCustomerFirebaseList,
+          //     builder: (context, snapshot) {
+          //       if (snapshot.connectionState == ConnectionState.waiting) {
+          //         return Shimmer.fromColors(
+          //             baseColor: Colors.grey[300]!,
+          //             highlightColor: Colors.grey[100]!,
+          //             child: Container(
+          //               width: widget.desktopView
+          //                   ? 320
+          //                   : widget.tabletView
+          //                       ? 250
+          //                       : 188,
+          //               height: widget.tabletView ? 400 : 283,
+          //               color: Colors.grey[300]!,
+          //             ));
+          //       } else if (snapshot.hasError) {
+          //         return Center(
+          //             child: Container(
+          //           alignment: Alignment.center,
+          //           color: Colors.grey,
+          //           width: widget.desktopView
+          //               ? 320
+          //               : widget.tabletView
+          //                   ? 250
+          //                   : 188,
+          //           height: widget.tabletView ? 400 : 283,
+          //           child: Text(
+          //             'Something went wrong...',
+          //             style: GoogleFonts.outfit(color: Colors.white),
+          //           ),
+          //         ));
+          //       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          //         return Center(
+          //             child: Container(
+          //           alignment: Alignment.center,
+          //           color: Colors.grey,
+          //           width: widget.desktopView
+          //               ? 320
+          //               : widget.tabletView
+          //                   ? 250
+          //                   : 188,
+          //           height: widget.tabletView ? 400 : 283,
+          //           child: Text(
+          //             'No data found!',
+          //             style: GoogleFonts.outfit(color: Colors.white),
+          //           ),
+          //         ));
+          //       } else {
+          //         return GestureDetector(
+          //             onTap: () =>
+          //                 {widget.onClickVideo(snapshot.data![0].videoUrl)},
+          //             child: Stack(alignment: Alignment.center, children: [
+          //               Container(
+          //                 margin: EdgeInsets.only(
+          //                     left: widget.desktopView ? 60 : 10),
+          //                 width: widget.desktopView
+          //                     ? 320
+          //                     : widget.tabletView
+          //                         ? 250
+          //                         : 180,
+          //                 height: widget.tabletView ? 400 : 283,
+          //                 child: Image.network(
+          //                   snapshot.data![0].thumbnailUrl,
+          //                   fit: BoxFit.fill,
+          //                 ),
+          //               ),
+          //               Container(
+          //                   margin: EdgeInsets.only(
+          //                       left: widget.desktopView ? 60 : 10),
+          //                   child: widget.playIconWidget)
+          //             ]));
+          //       }
+          //     }),
+          // SizedBox(
+          //   width: widget.desktopView
+          //       ? 80
+          //       : widget.tabletView
+          //           ? 30
+          //           : 10,
+          // ),
           Expanded(
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2165,7 +2274,7 @@ class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'About JP Optical',
+                        'About JP Opticals',
                         style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: widget.desktopView
@@ -2188,25 +2297,24 @@ class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
                           : widget.tabletView
                               ? 20
                               : 10),
-                  SvgPicture.asset(
-                    'assets/images/sunglass_image_blue.svg',
-                    semanticsLabel: 'Sungalass',
-                    width: widget.tabletView ? 60 : 30,
-                    height: widget.tabletView ? 60 : 30,
-                    // colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                  )
+                  SvgPicture.asset('assets/images/sunglass_image_blue.svg',
+                      semanticsLabel: 'Sungalass',
+                      width: widget.tabletView ? 60 : 30,
+                      height: widget.tabletView ? 60 : 30)
                 ],
               ),
               const SizedBox(
-                height: 30,
+                height: 10,
               ),
-              Text(
-                'At JP OPTICAL, we are dedicated to providing you with the highest quality optical products and watches. Our mission is to help you see better and look great. With years of experience in the optical and watch industry, we pride ourselves on offering exceptional customer service and a wide range of products to suit every style and need.',
-                style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w400,
-                    fontSize: widget.tabletView ? 16 : 12,
-                    color: Colors.black),
-              )
+              Container(
+                  width: widget.desktopView ? 500 : double.infinity,
+                  child: Text(
+                    "At JP OPTICALS, we are dedicated to providing you with the highest quality optical products, watches, men's clothing, and accessories. Our mission is to help you see better and look great. With years of experience in the optical, watch, and fashion industry, we pride ourselves on offering exceptional customer service and a wide range of products to suit every style and need. Whether you're looking for the perfect pair of glasses, a stylish watch, or the latest in men's fashion, JP OPTICALS has you covered.",
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w400,
+                        fontSize: widget.tabletView ? 16 : 12,
+                        color: Colors.black),
+                  ))
             ],
           )),
           SizedBox(
@@ -2424,8 +2532,8 @@ class Footer extends StatelessWidget {
                 onPressed: () => redirectUri('', 'normalWhatsAppContact', ''),
               ),
               IconButton(
-                icon: SvgPicture.asset(
-                  'assets/icons/instagram_icon.svg',
+                icon: Image.asset(
+                  'assets/icons/instagram_icon.png',
                   height: 20,
                   width: 20,
                 ),
@@ -2440,6 +2548,14 @@ class Footer extends StatelessWidget {
                 onPressed: () => redirectUri('', 'facebook', ''),
               ),
               IconButton(
+                icon: Image.asset(
+                  'assets/icons/snapchat.png',
+                  height: 20,
+                  width: 20,
+                ),
+                onPressed: () => redirectUri('', 'snapchat', ''),
+              ),
+              IconButton(
                 icon: SvgPicture.asset(
                   'assets/icons/youtube_icon.svg',
                   height: 20,
@@ -2449,10 +2565,10 @@ class Footer extends StatelessWidget {
               ),
             ],
           ),
-          Text('© ${DateTime.now().year} JP Optical. All rights reserved.',
+          Text('© ${DateTime.now().year} JP Opticals. All rights reserved.',
               style: GoogleFonts.outfit(
                 color: Colors.grey[700],
-                fontSize: 14,
+                fontSize: 10,
               ))
         ]));
   }

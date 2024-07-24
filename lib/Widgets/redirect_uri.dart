@@ -1,15 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void redirectUri(String phoneNumber, String action, String itemsJson) async {
   const instagramUsername = 'username';
-  const facebookProfile = 'username_or_page_id';
-  const youtubeChannelId = 'username_or_page_id';
-
+  const facebookProfile = 'profile.php?id=61563036562291';
+  const youtubeChannelId = 'username_or_page_id'; 
+  const snapchatUsername = 'username_or_page_id';
   Uri url;
   switch (action) {
     case 'orderThroghWhatsApp':
@@ -20,17 +18,17 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
       String productDetails = items.map((item) {
         List<String> details = [];
         if (item['productId'] != null) {
-          details.add(item['productId']);
+          details.add('Product ID: ${item['productId']}');
         }
         if (item['productTitle'] != null) {
-          details.add(item['productTitle']);
+          details.add('Product Name: ${item['productTitle']}');
         }
         if (item['quantity'] != null) {
           details.add('Quantity: ${item['quantity']}');
-        }else{
+        } else {
           details.add('Quantity: 1');
         }
- 
+
         if (item['productSize'] != null && item['productSize'] != '') {
           details.add('Size: ${item['productSize']}');
         }
@@ -48,11 +46,10 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
 
       url = Uri.parse(
           'https://wa.me/${formatPhoneNumber(phoneNumber)}?text=${Uri.encodeComponent(fullMessage)}');
-
       break;
     case 'normalWhatsAppContact':
       const thankYouNote =
-          'Thank you for contacting us! Please let us know how can we help!';
+          'Thank you for contacting us! Please let us know how can we help you!';
       url = Uri.parse(
           'https://wa.me/${formatPhoneNumber(phoneNumber)}?text=${Uri.encodeComponent(thankYouNote)}');
       break;
@@ -64,6 +61,9 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
       break;
     case 'youtube':
       url = Uri.parse('https://www.youtube.com/channel/$youtubeChannelId');
+      break;
+    case 'snapchat':
+       url = Uri.parse('https://www.snapchat.com/add/$snapchatUsername');
       break;
     default:
       url = Uri.parse('https://www.google.com');
@@ -78,11 +78,11 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
       await cartBox.clear();
     } else {
       // Handle the case where the URL cannot be launched
-      print('Could not launch the URL: $url');
+      debugPrint('Could not launch the URL: $url');
     }
   } catch (e) {
     // Handle any errors that occur during URL launch
-    print('Error launching URL: $e');
+    debugPrint('Error launching URL: $e');
   }
 }
 

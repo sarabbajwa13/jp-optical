@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 
 class BannerWidget extends StatelessWidget {
 final bool tabletView, desktopView;
+final String imageUrl;
 
-  const BannerWidget({Key? key, required this.tabletView , required this.desktopView})
+  const BannerWidget({Key? key, required this.tabletView , required this.desktopView, required this.imageUrl})
       : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -23,10 +24,10 @@ final bool tabletView, desktopView;
           // ),
           Container(
               width: double.infinity,
-              height: desktopView ? 365 : tabletView ? 180 : 94,
-              child: Image.asset(
-                'assets/images/third_banner.png',
-                fit: BoxFit.cover,
+              height: desktopView ? 480 : tabletView ? 320 : 180,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.fill,
               )),
         ],
       ),

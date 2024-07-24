@@ -15,7 +15,7 @@ class HappyCustomerFirabaseModel {
     return HappyCustomerFirabaseModel( 
       thumbnailUrl: doc['thumbnailUrl'],
       videoUrl: doc['videoUrl'],
-      createdBy: doc['createdBy'],
+      createdBy: doc['createdBy'] as Timestamp,
     );
   }
 }

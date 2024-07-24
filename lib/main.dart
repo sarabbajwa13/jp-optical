@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:jp_optical/colors/app_color.dart';
 import 'package:jp_optical/local_storage/cart_service.dart';
 import 'package:jp_optical/presentation/home_screen_new.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,6 +9,7 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+ 
 
   runApp(
     ChangeNotifierProvider(
@@ -36,9 +38,10 @@ class MainApp extends StatelessWidget {
         future: _initializeApp(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
+            return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.cGreenColor))
+,
               ),
             );
           } else if (snapshot.hasError) {

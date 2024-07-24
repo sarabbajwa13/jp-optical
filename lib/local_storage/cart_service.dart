@@ -42,7 +42,7 @@ class CartService extends ChangeNotifier {
 
   void addToCart(ProductItemFirebaseModel item, String? selectedSize) async {
     item.selectedSize = selectedSize; // Set the selected size
-    final existingItemIndex = _cartItems.indexWhere((cartItem) => cartItem.productId == item.productId && cartItem.selectedSize == selectedSize);
+    final existingItemIndex = _cartItems.indexWhere((cartItem) => cartItem.createdBy == item.createdBy && cartItem.selectedSize == selectedSize);
 
     if (existingItemIndex == -1) {
       // Item with selected size does not exist, add it to the cart
@@ -50,12 +50,12 @@ class CartService extends ChangeNotifier {
       await saveCartItems(_cartItems);
       debugPrint('Item added to cart: ${item.toMap()}');
     } else {
-      debugPrint('Item with productId ${item.productId} and size $selectedSize already exists in cart');
+      debugPrint('Item with productId ${item.createdBy} and size $selectedSize already exists in cart');
     }
   }
 
   void removeFromCart(ProductItemFirebaseModel item) async {
-    _cartItems.removeWhere((cartItem) => cartItem.productId == item.productId && cartItem.selectedSize == item.selectedSize);
+    _cartItems.removeWhere((cartItem) => cartItem.createdBy == item.createdBy && cartItem.selectedSize == item.selectedSize);
     await saveCartItems(_cartItems);
     notifyListeners(); // Notify listeners to update UI
   }

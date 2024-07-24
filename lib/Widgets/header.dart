@@ -23,10 +23,8 @@ class Header extends StatefulWidget {
   State<Header> createState() => _HeaderState();
 }
 
-
 class _HeaderState extends State<Header> {
- 
- @override
+  @override
   void initState() {
     super.initState();
     _loadCartItems();
@@ -36,27 +34,37 @@ class _HeaderState extends State<Header> {
     await Provider.of<CartService>(context, listen: false).loadCartItems();
   }
 
-    Widget cartIcon(CartService cartService){
-       final isEmptyCart = cartService.isEmptyCart;
-      return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: SvgPicture.asset(
-        isEmptyCart ? 'assets/icons/empty_cart_icon.svg' : 'assets/icons/not_empty_cart_icon.svg',
-        semanticsLabel: 'Cart',
-        width: isEmptyCart ? 25 : 30,
-        height: isEmptyCart ? 25 : 30,
-colorFilter: isEmptyCart ? const ColorFilter.mode(Colors.white, BlendMode.srcIn) : null,
-      ));
-    }
+  Widget cartIcon(CartService cartService, bool tabletView) {
+    final isEmptyCart = cartService.isEmptyCart;
+    return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Image.asset(
+          isEmptyCart
+              ? 'assets/icons/empty_cart_icon.png'
+              : 'assets/icons/not_empty_cart_icon.png',
+          width: isEmptyCart & tabletView
+              ? 40
+              : !isEmptyCart & tabletView
+                  ? 40
+                  : 30,
+          height: isEmptyCart & tabletView
+              ? 40
+              : !isEmptyCart & tabletView
+                  ? 40
+                  : 30,
+          color: isEmptyCart ? Colors.white : null,
+          colorBlendMode: isEmptyCart ? BlendMode.srcIn : BlendMode.srcOver,
+        ));
+  }
 
-  Widget hamburgerWidget(BuildContext cart) {
-    return (Container( 
+  Widget hamburgerWidget(BuildContext cart, bool tabletView) {
+    return (Container(
       decoration: BoxDecoration(
           color: AppColors.cGreenColor, borderRadius: BorderRadius.circular(2)),
-      child: const Icon(
+      child: Icon(
         Icons.menu,
         color: Colors.white,
-        size: 30,
+        size: tabletView ? 40 : 30,
       ),
     ));
   }
@@ -67,72 +75,72 @@ colorFilter: isEmptyCart ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
       onPressed: () => Navigator.pop(context),
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
     var tabletView = screenSize.width > 600;
-    return Consumer<CartService>(
-      builder: (context, cartService, child) {
-        return Column(children: [
-      Container(
+    return Consumer<CartService>(builder: (context, cartService, child) {
+      return Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal:  widget.routeFromHome ? 20 : 5, vertical: widget.routeFromHome  ? 20 : tabletView ? 20 : 5),
+          padding: EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: widget.routeFromHome && tabletView ? 20 : 10),
           color: AppColors.blackColor,
-          child: Stack(
-            alignment: tabletView ? Alignment.center : Alignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  // tabletView
-                  //     ? ElevatedButton(
-                  //         onPressed: () {
-                  //           redirectUri('', 'normalWhatsAppContact', '');
-                  //         },
-                  //         style: ElevatedButton.styleFrom(
-                  //           backgroundColor: Colors.transparent,
-                  //           side: const BorderSide(
-                  //               color: AppColors.cGreenColor, width: 1.0),
-                  //           shape: RoundedRectangleBorder(
-                  //             borderRadius: BorderRadius.circular(55.0),
-                  //           ),
-                  //         ),
-                  //         child: Text('Get Direction',
-                  //             style: GoogleFonts.outfit(
-                  //                 color: Colors.white,
-                  //                 fontWeight: FontWeight.w400,
-                  //                 fontSize: 20)))
-                  //     : Container(),
-                  const SizedBox(width: 20),
-                  widget.showCart
-                      ? GestureDetector(
-                          onTap: () => {widget.onClickHamburger('show_cart')},
-                          child:  
-                          cartIcon(cartService))
-                      : GestureDetector(
-                          onTap: () => {widget.onClickHamburger('show_drawer')},
-                          child: hamburgerWidget(context)),
-                          widget.showCart ? const SizedBox(width: 10) : Container(),
-                ],
-              ),
-              widget.showBackArrow
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [backArrowWidget(context)])
-                  : Container(),
-              Text('RJ Brothers',
-                  style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                      fontSize: tabletView ? 32 : 20)),
+              widget.routeFromHome
+                  ? GestureDetector(
+                      onTap: () => {widget.onClickHamburger('show_drawer')},
+                      child: hamburgerWidget(context, tabletView))
+                  : backArrowWidget(context),
+              Expanded(
+                  child: Container(
+                      margin: EdgeInsets.only(left: tabletView ? 0 : 35),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(top: tabletView ? 13 : 10),
+                            child: SvgPicture.asset(
+                              'assets/images/glass_icon_header.svg',
+                              width: tabletView ? null : 40,
+                            ),
+                          ),
+                          SizedBox(width: tabletView ? 10 : 5),
+                          SizedBox(
+                              width: 170,
+                              child: Stack(
+                                alignment: Alignment.centerRight,
+                                children: [
+                                  Container(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text('JP Opticals',
+                                          style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: tabletView ? 23 : 18))),
+                                  Container(
+                                      margin: EdgeInsets.only(
+                                          top: tabletView ? 40 : 35,
+                                          right: tabletView ? 10 : 45),
+                                      child: Text('By RJ Brothers',
+                                          style: GoogleFonts.allura(
+                                              color: AppColors.cGreenColor,
+                                              fontWeight: FontWeight.normal,
+                                              fontSize: tabletView ? 18 : 15))),
+                                ],
+                              ))
+                        ],
+                      ))),
+              GestureDetector(
+                  onTap: () => {widget.onClickHamburger('show_cart')},
+                  child: cartIcon(cartService, tabletView)),
             ],
-          )),
-      Container(
-          color: Colors.black.withOpacity(0.8),
-          width: double.infinity,
-          height: 1)
-    ]);});
+          ));
+    });
   }
 }

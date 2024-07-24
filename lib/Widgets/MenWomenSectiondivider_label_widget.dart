@@ -8,7 +8,7 @@ class MenWomenSectionDividerLabelWidget extends StatelessWidget {
   final EdgeInsets margin;
   final MainAxisAlignment mainAxisAlignment;
   final CrossAxisAlignment crossAxisAlignment;
-  final bool tabletView;
+  final bool tabletView, routeFromHome;
 
   const MenWomenSectionDividerLabelWidget({
     Key? key,
@@ -17,7 +17,8 @@ class MenWomenSectionDividerLabelWidget extends StatelessWidget {
     required this.margin,
     this.mainAxisAlignment = MainAxisAlignment.end,
     this.crossAxisAlignment = CrossAxisAlignment.end,
-    required this.tabletView
+    required this.tabletView,
+    required this.routeFromHome
   }) : super(key: key);
 
   @override
@@ -51,7 +52,7 @@ class MenWomenSectionDividerLabelWidget extends StatelessWidget {
                   ),
                 )),
             Container(
-              margin: EdgeInsets.only(top: tabletView ?10 :5, bottom: 30),
+              margin: EdgeInsets.only(top: tabletView ?10 :5, bottom: routeFromHome ? 30 : 0),
               width: tabletView ? 200 : 140,
               height: 3,
               color: AppColors.cGreenColor,

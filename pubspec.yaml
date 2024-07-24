@@ -1,5 +1,5 @@
 name: jp_optical
-description: "A new Flutter project."
+description: "At JP OPTICALS, we are dedicated to providing you with the highest quality optical products, watches, men's clothing, and accessories."
 publish_to: 'none'
 version: 0.1.0
 
@@ -20,12 +20,13 @@ dependencies:
   responsive_grid_list: ^1.4.0
   flick_video_player: ^0.8.0
   cloud_firestore: ^5.0.2
-  rxdart: ^0.28.0
   hive: ^2.0.4
   hive_flutter: ^1.1.0
   url_launcher: ^6.1.5
   provider: ^6.0.0
   firebase_auth: ^5.1.2
+  carousel_slider: ^4.2.1
+  easy_image_viewer: ^1.5.1
 
 dev_dependencies:
   flutter_test:

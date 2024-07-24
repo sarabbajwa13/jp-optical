@@ -24,7 +24,6 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('sarab ji ');
     _loadCartItems();
   }
 
@@ -47,31 +46,7 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  // void addItemToCart(ProductItemFirebaseModel item) async {
-  //   try {
-  //     final currentCartItems = await CartService.loadCartItems();
-  //     final existingItemIndex = currentCartItems
-  //         .indexWhere((cartItem) => cartItem.productId == item.productId);
-
-  //     if (existingItemIndex == -1) {
-  //       // Item does not exist, add it to the cart
-  //       currentCartItems.add(item);
-  //       await CartService.saveCartItems(currentCartItems);
-  //       debugPrint('Item added to cart: ${item.toMap()}');
-  //     } else {
-  //       debugPrint(
-  //           'Item with productId ${item.productId} already exists in cart');
-  //     }
-
-  //     // Print cart items after adding
-  //     final updatedCartItems = await CartService.loadCartItems();
-  //     debugPrint(
-  //         'Cart items after adding: ${updatedCartItems.map((item) => item.toMap()).toList()}');
-  //   } catch (e) {
-  //     debugPrint('Error adding item to cart: $e');
-  //   }
-  // }
-
+   
   void _updateQuantity(ProductItemFirebaseModel item, int change) async {
     setState(() {
       item.quantity += change;
@@ -153,7 +128,7 @@ class _CartScreenState extends State<CartScreen> {
     try {
       showAnimatedDialog(context, {}, '');
     } catch (e) {
-      print('Error printing stored data: $e');
+      debugPrint('Error printing stored data: $e');
     }
   }
 

@@ -56,8 +56,8 @@ class CustomDialog extends StatelessWidget {
                                         CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        title,
-                                        style: const TextStyle(
+                                        'Added to cart',
+                                        style: GoogleFonts.outfit(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
                                         ),

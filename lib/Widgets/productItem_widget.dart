@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jp_optical/Widgets/image_viewer.dart';
 import 'package:jp_optical/colors/app_color.dart';
 import 'package:jp_optical/local_storage/cart_service.dart';
 import 'package:jp_optical/models/product_item_firebase_model.dart';
@@ -74,6 +75,8 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
               'productTitle': widget.bestSellerFirebaseList.productTitle,
               'productImage': widget.bestSellerFirebaseList.productImage,
               'productSize': selectedSize,
+              'createdBy': widget.bestSellerFirebaseList.createdBy,
+
             });
           } else {
             widget.onClickCallBack({
@@ -82,6 +85,7 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
               'productTitle': widget.bestSellerFirebaseList.productTitle,
               'productImage': widget.bestSellerFirebaseList.productImage,
               'productSize': selectedSize ?? '',
+              'createdBy': widget.bestSellerFirebaseList.createdBy,
             });
           }
         },
@@ -196,103 +200,102 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: widget.desktopView
-                        ? 420
-                        : widget.isHorizontalList
-                            ? 300
-                            : double.infinity,
-                    height: widget.desktopView
-                        ? 300
-                         
-                            : 200,
-                    margin: EdgeInsets.only(top: widget.desktopView ? 30 : 10),
-                    child: Image.network(
-                      widget.bestSellerFirebaseList.productImage,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
+                  GestureDetector(
+                      onTap: () => {
+                            widget.onClickCallBack({
+                              'action': 'imageUrl',
+                              'imageUrl':
+                                  widget.bestSellerFirebaseList.productImage
+                            })
+                          },
+                      child: Container(
+                        width: widget.desktopView
+                            ? 420
+                            : widget.isHorizontalList
+                                ? 300
+                                : double.infinity,
+                        height: widget.desktopView ? 300 : 200,
+                        margin:
+                            EdgeInsets.only(top: widget.desktopView ? 30 : 10),
+                        child: Image.network(
+                          widget.bestSellerFirebaseList.productImage,
+                          fit: BoxFit.fill,
+                        ),
+                      )),
                   Container(
                     height: 50,
                     alignment: Alignment.center,
-                    margin: const EdgeInsets.symmetric(  vertical: 20),
+                    margin: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
-                        maxLines: 4,
-                        textAlign: TextAlign.center,
-                        widget.bestSellerFirebaseList.productTitle,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.outfit(
-                          fontWeight: widget.desktopView
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          fontSize: widget.tabletView ? 16 : 12,
-                          color: Colors.black,
-                        ),
+                      maxLines: 4,
+                      textAlign: TextAlign.center,
+                      widget.bestSellerFirebaseList.productTitle,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontWeight: widget.desktopView
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        fontSize: widget.tabletView ? 16 : 12,
+                        color: Colors.black,
                       ),
-                 
+                    ),
                   ),
                   widget.bestSellerFirebaseList.size != null
                       ? Container(
                           margin: const EdgeInsets.symmetric(vertical: 10),
                           height: 60,
-                         
                           alignment: Alignment.center,
-                          child: Row( 
-                            children: [  
-                             Expanded(child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: widget
-                                          .bestSellerFirebaseList.size!.length,
-                                      itemBuilder: (context, index) {
-                                        final size = widget
-                                            .bestSellerFirebaseList
-                                            .size![index];
-                                        final isSelected = size == selectedSize;
+                          child: Row(
+                            children: [
+                              Expanded(
+                                  child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount:
+                                    widget.bestSellerFirebaseList.size!.length,
+                                itemBuilder: (context, index) {
+                                  final size = widget
+                                      .bestSellerFirebaseList.size![index];
+                                  final isSelected = size == selectedSize;
 
-                                        return GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              selectedSize = size;
-                                              print(
-                                                  'Selected size: $selectedSize');
-                                            });
-                                          },
-                                          child: Container(
-                                            margin:
-                                                const EdgeInsets.only(left: 10),
-                                            height: 40,
-                                            width: 40,
-                                            alignment: Alignment.center,
-                                            padding: const EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: isSelected
-                                                    ? AppColors.cGreenColor
-                                                    : Colors.grey,
-                                                width: 2.0,
-                                              ),
-                                              shape: BoxShape.circle,
-                                              color: isSelected
-                                                  ? AppColors.cGreenColor.withOpacity(0.2)
-                                                  : Colors.transparent,
-                                            ),
-                                            child: Text(
-                                      
-                                              textAlign: TextAlign.center,
-                                              size.toString(),
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 10,
-                                                
-                                                fontWeight: FontWeight.bold,
-                                                color:   Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    )
-                          
-                            )],
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedSize = size;
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 10),
+                                      height: 40,
+                                      width: 40,
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.cGreenColor
+                                              : Colors.grey,
+                                          width: 2.0,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        color: isSelected
+                                            ? AppColors.cGreenColor
+                                                .withOpacity(0.2)
+                                            : Colors.transparent,
+                                      ),
+                                      child: Text(
+                                        textAlign: TextAlign.center,
+                                        size.toString(),
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ))
+                            ],
                           ),
                         )
                       : const Center(),
