@@ -53,7 +53,7 @@ class _HeaderState extends State<Header> {
                   ? 40
                   : 30,
           color: isEmptyCart ? Colors.white : null,
-          colorBlendMode: isEmptyCart ? BlendMode.srcIn : BlendMode.srcOver,
+          colorBlendMode: isEmptyCart ? BlendMode.srcIn : null,
         ));
   }
 

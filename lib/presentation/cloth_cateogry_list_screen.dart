@@ -34,7 +34,7 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
   String productListData = '', updatedCollectionName = '';
   String? selectedCategory;
   final _scrollController = ScrollController();
-  final List<ProductItemFirebaseModel> _products = [];
+  List<ProductItemFirebaseModel> _products = [];
   DocumentSnapshot? _lastDoc;
   bool _isLoading = false;
   bool _hasMore = true;
@@ -68,7 +68,7 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
             collectionName: collectionName, lastDoc: _lastDoc, limit: 10);
     List<ProductItemFirebaseModel> newProducts = result['products'];
     DocumentSnapshot? lastDocument = result['lastDocument'];
-
+   
     setState(() {
       _products.addAll(newProducts);
       _lastDoc = lastDocument;

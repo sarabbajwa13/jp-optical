@@ -52,6 +52,7 @@ class CartService extends ChangeNotifier {
     } else {
       debugPrint('Item with productId ${item.createdBy} and size $selectedSize already exists in cart');
     }
+    notifyListeners();
   }
 
   void removeFromCart(ProductItemFirebaseModel item) async {

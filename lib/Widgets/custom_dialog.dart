@@ -163,7 +163,7 @@ class CustomDialog extends StatelessWidget {
                                           onTap: () => {
                                                 onConfirm({
                                                       'action': RedirectionString.secondMobileNumber,
-                                                     'productId': data['productId'] ?? '', 
+                                                      'productId': data['productId'] ?? '', 
                                                       'productTitle': data['productTitle'] ?? '',
                                                       'productImage': data['productImage'] ?? '',
                                                       'productSize': data['productSize'] ?? '',

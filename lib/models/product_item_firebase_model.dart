@@ -6,6 +6,7 @@ class ProductItemFirebaseModel {
   final String productId;
   final String productImage;
   final String productTitle;
+  final String? productDesc;
   final Timestamp createdBy;
   List<String>? size; 
   int quantity;
@@ -15,6 +16,7 @@ class ProductItemFirebaseModel {
     required this.productId,
     required this.productImage,
     required this.productTitle,
+    this.productDesc,
     required this.createdBy,
     this.size,  
     this.quantity = 1,
@@ -53,6 +55,7 @@ class ProductItemFirebaseModel {
       productId: data['productId'] ?? '',
       productImage: data['productImage'] ?? '',
       productTitle: data['productTitle'] ?? '',
+      productDesc: data['productDesc'] ?? '',
       createdBy: data['createdBy'] as Timestamp,
       size: data.containsKey('size') && data['size'] != null
           ? List<String>.from(data['size'])

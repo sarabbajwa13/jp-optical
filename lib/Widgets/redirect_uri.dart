@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void redirectUri(String phoneNumber, String action, String itemsJson) async {
-  const instagramUsername = 'username';
+  const instagramUsername = 'rjeyes2000?igsh=MTVkajZ2OThydG5zaQ==';
   const facebookProfile = 'profile.php?id=61563036562291';
   const youtubeChannelId = 'username_or_page_id'; 
   const snapchatUsername = 'username_or_page_id';
@@ -17,7 +17,7 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
 
       String productDetails = items.map((item) {
         List<String> details = [];
-        if (item['productId'] != null) {
+        if (item['productId'] != null && item['productId'] != '') {
           details.add('Product ID: ${item['productId']}');
         }
         if (item['productTitle'] != null) {
@@ -66,7 +66,10 @@ void redirectUri(String phoneNumber, String action, String itemsJson) async {
        url = Uri.parse('https://www.snapchat.com/add/$snapchatUsername');
       break;
     default:
-      url = Uri.parse('https://www.google.com');
+      const thankYouNote =
+          'Thank you for contacting us! Please let us know how can we help you!';
+      url = Uri.parse(
+          'https://wa.me/${formatPhoneNumber(phoneNumber)}?text=${Uri.encodeComponent(thankYouNote)}');
       break;
   }
 

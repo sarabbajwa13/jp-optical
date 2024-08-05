@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class BannerWidget extends StatelessWidget {
 final bool tabletView, desktopView;
@@ -23,11 +24,12 @@ final String imageUrl;
           //   height: tabletView ? 80 : 30,
           // ),
           Container(
+              
               width: double.infinity,
               height: desktopView ? 480 : tabletView ? 320 : 180,
               child: Image.network(
                 imageUrl,
-                fit: BoxFit.fill,
+                fit: BoxFit.cover,
               )),
         ],
       ),

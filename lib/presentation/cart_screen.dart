@@ -273,20 +273,14 @@ Widget cartItemWidget(
                               onTap: () => {updateQuantity(item, -1)},
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                    horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: Colors.black.withOpacity(0.2),
                                     width: 1.0,
                                   ),
                                 ),
-                                child: Text(
-                                  '-',
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
+                                child: const Icon(Icons.remove ,size: 15, color: Colors.black,
                                 ),
                               ))),
                       Container(
@@ -308,7 +302,7 @@ Widget cartItemWidget(
                           '${item.quantity}',
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w400,
-                            fontSize: 12,
+                            fontSize: 15,
                             color: Colors.black,
                           ),
                         ),
@@ -319,20 +313,14 @@ Widget cartItemWidget(
                               onTap: () => {updateQuantity(item, 1)},
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                    horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: Colors.black.withOpacity(0.2),
                                     width: 1.0,
                                   ),
                                 ),
-                                child: Text(
-                                  '+',
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
+                                child: const Icon(Icons.add ,size: 15, color: Colors.black,
                                 ),
                               ))),
                     ],

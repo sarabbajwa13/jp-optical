@@ -1,21 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HappyCustomerFirabaseModel { 
-  final String thumbnailUrl;
-  final String videoUrl;
-  final Timestamp createdBy;
+  final String? thumbnailUrl;
+  final String? videoUrl;
+  final Timestamp? createdBy;
 
   HappyCustomerFirabaseModel({ 
-    required this.thumbnailUrl,
-    required this.videoUrl,
-    required this.createdBy,
+    this.thumbnailUrl,
+    this.videoUrl,
+    this.createdBy,
   });
 
   factory HappyCustomerFirabaseModel.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return HappyCustomerFirabaseModel( 
-      thumbnailUrl: doc['thumbnailUrl'],
-      videoUrl: doc['videoUrl'],
-      createdBy: doc['createdBy'] as Timestamp,
+      thumbnailUrl: data.containsKey('thumbnailUrl') ? data['thumbnailUrl'] as String? : null,
+      videoUrl: data.containsKey('videoUrl') ? data['videoUrl'] as String? : null,
+      createdBy: data['createdBy'] is Timestamp ? data['createdBy'] as Timestamp? : null,
     );
   }
 }

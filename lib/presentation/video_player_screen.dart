@@ -15,18 +15,31 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late FlickManager flickManager;
 
   @override
-  void initState() {
-    super.initState();
-    flickManager = FlickManager(
-      videoPlayerController: VideoPlayerController.network(widget.videoUrl)
-        ..initialize().then((_) {
-          setState(() {}); // Ensure the first frame is shown.
-          flickManager.flickVideoManager?.videoPlayerController!.addListener(_onVideoPlayerChanged);
-        })
-        ..setLooping(true)
-        ..play(),
-    );
-  }
+void initState() {
+  super.initState();
+  flickManager = FlickManager(
+    videoPlayerController: VideoPlayerController.network(widget.videoUrl)
+      ..initialize().then((_) {
+        setState(() {
+          // Ensure the first frame is shown.
+        });
+
+        // Play the video for a short duration to render the first frame
+        // flickManager.flickVideoManager?.videoPlayerController?.play();
+
+        // // Delay and then pause the video
+        // Future.delayed(Duration(milliseconds: 100), () {
+        //   flickManager.flickVideoManager?.videoPlayerController?.pause();
+        // });
+
+        // Listener for video player changes
+        flickManager.flickVideoManager?.videoPlayerController!.addListener(_onVideoPlayerChanged);
+      })
+      ..setLooping(true)
+      ..play(),
+  );
+}
+
 
   void _onVideoPlayerChanged() {
     final controller = flickManager.flickVideoManager?.videoPlayerController;

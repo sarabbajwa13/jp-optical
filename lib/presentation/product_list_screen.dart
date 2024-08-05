@@ -33,7 +33,7 @@ class Productlistscreen extends StatefulWidget {
 
 class _ProductlistscreenState extends State<Productlistscreen> {
   late Future<List<ProductItemFirebaseModel>> productList = Future.value([]);
-  String productListData = '';
+  String productListData = '',updatedCollectionName='';
   final _scrollController = ScrollController();
   List<ProductItemFirebaseModel> _products = [];
   DocumentSnapshot? _lastDoc;
@@ -67,14 +67,14 @@ class _ProductlistscreenState extends State<Productlistscreen> {
       if (!_isLoading &&
           _scrollController.offset ==
               _scrollController.position.maxScrollExtent) {
-        _fetchProducts(widget.firebaeCollectionName);
+        _fetchProducts(updatedCollectionName != '' ? updatedCollectionName : widget.firebaeCollectionName);
       }
     });
   }
 
   Future<void> _fetchProducts(String collectionName) async {
     if (_isLoading || !_hasMore) return;
-
+    
     setState(() {
       _isLoading = true;
     });
@@ -84,7 +84,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
             collectionName: collectionName, lastDoc: _lastDoc, limit: 10);
     List<ProductItemFirebaseModel> newProducts = result['products'];
     DocumentSnapshot? lastDocument = result['lastDocument'];
-
+ 
     setState(() {
       _products.addAll(newProducts);
       _lastDoc = lastDocument;
@@ -265,6 +265,10 @@ class _ProductlistscreenState extends State<Productlistscreen> {
                             onTap: () {
                               setState(() {
                                 if (!isMenTabSelected) {
+                                  updatedCollectionName = widget.firebaeCollectionName ==
+                                          Endpoints.menBagProductList
+                                      ? Endpoints.menBagProductList
+                                      : Endpoints.menWatchProductList;
                                   _products.clear();
                                   _lastDoc = null;
                                   _isLoading = false;
@@ -286,6 +290,10 @@ class _ProductlistscreenState extends State<Productlistscreen> {
                             onTap: () {
                               setState(() {
                                 if (!isWomenTabSelected) {
+                                   updatedCollectionName = widget.firebaeCollectionName ==
+                                          Endpoints.menBagProductList
+                                      ? Endpoints.womenBagProductList
+                                      : Endpoints.womenWatchProductList;
                                   _products.clear();
                                   _lastDoc = null;
                                   _isLoading = false;

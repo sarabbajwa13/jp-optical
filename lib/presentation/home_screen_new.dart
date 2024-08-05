@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:jp_optical/Widgets/MenWomenSectiondivider_label_widget.dart';
@@ -56,7 +55,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   DocumentSnapshot? _lastDoc;
   bool _isLoading = false, isFirstTime = true;
   bool _hasMore = true;
-
+  late List<FlickManager> flickManagers;
   @override
   void initState() {
     super.initState();
@@ -70,7 +69,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
       }
     });
     //upload data on firestore
-    // FirebaseFirestore.instance.collection('menJacketList').add({
+    // FirebaseFirestore.instance.collection('menOpticalProductList').add({
     //   'productTitle':'Men Jacket new',
     //   'productImage':'https://images.vexels.com/media/users/3/234039/isolated/preview/0bb83cedf3679102fae76c6bbb940ccb-denim-jean-jacket.png',
     //   'createdBy': FieldValue.serverTimestamp(),
@@ -80,9 +79,8 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     //   debugPrint("Error writing document: $error");
     // });
 
-    // FirebaseFirestore.instance.collection('readyToOrderList').add({
-    //   'thumbnailUrl':'https://images.pexels.com/photos/925263/pexels-photo-925263.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    //   'videoUrl':'https://videos.pexels.com/video-files/4169233/4169233-sd_360_640_30fps.mp4',
+    // FirebaseFirestore.instance.collection(Endpoints.happyCustomerList).add({
+    //   'videoUrl':'https://firebasestorage.googleapis.com/v0/b/rj-brothers-e9d57.appspot.com/o/review6.mp4?alt=media&token=07ca0121-c6c3-4e36-8ba1-373dfa572b75',
     //   'createdBy': FieldValue.serverTimestamp(),
     // }).then((value) {
     //   debugPrint("Document successfully written!");
@@ -121,7 +119,6 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
       if (result.containsKey('products') &&
           result.containsKey('lastDocument')) {
         List<HappyCustomerFirabaseModel> newProducts = result['products'];
-
         DocumentSnapshot? lastDocument = result['lastDocument'];
 
         setState(() {
@@ -130,6 +127,20 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
           _isLoading = false;
           _hasMore = newProducts.length == 10;
           isFirstTime = false;
+
+          flickManagers = _readyToOrderFirebaseList.map((data) {
+            final videoController =
+                VideoPlayerController.network(data.videoUrl ?? '');
+            return FlickManager(
+              videoPlayerController: videoController
+                ..initialize().then((_) {
+                  // Play and then pause the video after a delay
+                  for (int i = 0; i < flickManagers.length; i++) {
+                    _playAndPauseVideo(i);
+                  }
+                }),
+            );
+          }).toList();
         });
       } else {
         setState(() {
@@ -141,6 +152,15 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
         _isLoading = false;
       });
     }
+  }
+
+  void _playAndPauseVideo(int index) {
+    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+
+    // Delay and then pause the video
+    Future.delayed(Duration(milliseconds: 100), () {
+      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
+    });
   }
 
   String bannerImageUrl = '', bannerImageUrl2 = '';
@@ -199,6 +219,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     _scrollController.dispose();
     _autoScrollTimer?.cancel();
     _readyToOrderScrollController.dispose();
+    for (var flickManager in flickManagers) {
+      flickManager.dispose();
+    }
     super.dispose();
   }
 
@@ -289,12 +312,17 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     });
   }
 
-  void navigateToVideoPlayerScreen(String videoUrl) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => VideoPlayerScreen(videoUrl: videoUrl)),
-    );
+  void navigateToVideoPlayerScreen(Map<String, dynamic> data) {
+    if (data['videoUrl'].isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                VideoPlayerScreen(videoUrl: data['videoUrl'])),
+      );
+    } else {
+      previewImage(data['thumbnailUrl']);
+    }
   }
 
   void handleClickOnWhatsAppNumber(Map<String, dynamic> data) {
@@ -320,6 +348,12 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
       default:
         Navigator.of(context).pop();
         redirectUri(action, 'normalWhatsAppContact', '');
+    }
+  }
+
+  void handleClickOnFooterWhatsApp(Map<String, dynamic> data) {
+    if (!dismissCartScreen) {
+      showAnimatedDialog(context, data, 'Get details');
     }
   }
 
@@ -517,140 +551,174 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                 const SizedBox(height: 20),
                                 ReadyToOrderDividerAndLabel(
                                     tabletView: tabletView),
-                                SizedBox(height: tabletView ? 50 : 0),
+                                SizedBox(height: tabletView ? 50 : 20),
 
-                                // glassLabelImage(),
                                 Container(
-                                    margin: EdgeInsets.only(
-                                        right: tabletView ? 60 : 10,
-                                        left: tabletView ? 60 : 10),
-                                    width: double.infinity,
-                                    child: SizedBox(
-                                        height: desktopView ? 550 : 300,
-                                        child: SingleChildScrollView(
-                                          controller:
-                                              _readyToOrderScrollController,
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: List.generate(
+                                  margin: EdgeInsets.only(
+                                    right: tabletView ? 60 : 10,
+                                    left: tabletView ? 60 : 10,
+                                  ),
+                                  width: double.infinity,
+                                  child: Container(
+                                    height: desktopView ? 550 : 300,
+                                    child: SingleChildScrollView(
+                                      controller: _readyToOrderScrollController,
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: _readyToOrderFirebaseList
+                                                .isNotEmpty
+                                            ? List.generate(
                                                 _readyToOrderFirebaseList
                                                         .length +
                                                     (_hasMore ? 1 : 0),
                                                 (index) {
-                                              if (index ==
-                                                  _readyToOrderFirebaseList
-                                                      .length) {
-                                                return isFirstTime
-                                                    ? Shimmer.fromColors(
-                                                        baseColor: Colors
-                                                            .grey[300]!,
-                                                        highlightColor: Colors
-                                                            .grey[100]!,
-                                                        child: Container(
-                                                          width: desktopView
-                                                              ? 365
-                                                              : tabletView
-                                                                  ? 165
-                                                                  : 365,
-                                                          height: desktopView
-                                                              ? 620
-                                                              : tabletView
-                                                                  ? 500
-                                                                  : 320,
-                                                          color:
-                                                              Colors.grey[300]!,
-                                                        ))
-                                                    : Center(
-                                                        child: Container(
-                                                            margin:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 10),
-                                                            child: const CircularProgressIndicator(
-                                                                valueColor:
-                                                                    AlwaysStoppedAnimation<
-                                                                            Color>(
-                                                                        AppColors
-                                                                            .cGreenColor))));
-                                              }
-                                              return Container(
-                                                width: desktopView ? 350 : 200,
-                                                height: double.infinity,
-                                                child: GestureDetector(
-                                                  onTap: () => {
-                                                    navigateToVideoPlayerScreen(
-                                                        _readyToOrderFirebaseList[
-                                                                index]
-                                                            .videoUrl)
-                                                  },
-                                                  child: MouseRegion(
-                                                    cursor: SystemMouseCursors
-                                                        .click,
-                                                    child: Stack(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      children: [
-                                                        Container(
-                                                          width: 350,
-                                                          height:
-                                                              double.infinity,
-                                                          margin: EdgeInsets
-                                                              .fromLTRB(
-                                                            0,
-                                                            20,
-                                                            index ==
-                                                                    _readyToOrderFirebaseList
-                                                                            .length -
-                                                                        1
-                                                                ? 0
-                                                                : 10,
-                                                            0,
-                                                          ),
-                                                          child: Image.network(
-                                                            _readyToOrderFirebaseList[
-                                                                    index]
-                                                                .thumbnailUrl,
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                        ),
-                                                        Container(
-                                                          width: desktopView
-                                                              ? 60
-                                                              : 35,
-                                                          height: desktopView
-                                                              ? 60
-                                                              : 35,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        50),
-                                                            border: Border.all(
-                                                                width: 2,
+                                                  if (index ==
+                                                      _readyToOrderFirebaseList
+                                                          .length) {
+                                                    return isFirstTime
+                                                        ? Shimmer.fromColors(
+                                                            baseColor: Colors
+                                                                .grey[300]!,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .grey[100]!,
+                                                            child: Container(
+                                                              width: desktopView
+                                                                  ? 365
+                                                                  : tabletView
+                                                                      ? 165
+                                                                      : 365,
+                                                              height: desktopView
+                                                                  ? 620
+                                                                  : tabletView
+                                                                      ? 500
+                                                                      : 320,
+                                                              color: Colors
+                                                                  .grey[300]!,
+                                                            ),
+                                                          )
+                                                        : Container();
+                                                  }
+                                                  return Container(
+                                                    width:
+                                                        desktopView ? 288 : 180,
+                                                    height: double.infinity,
+                                                    child: GestureDetector(
+                                                      onTap: () => {
+                                                        navigateToVideoPlayerScreen({
+                                                          'videoUrl':
+                                                              _readyToOrderFirebaseList[
+                                                                      index]
+                                                                  .videoUrl!,
+                                                          'thumbnailUrl':
+                                                              _readyToOrderFirebaseList[
+                                                                      index]
+                                                                  .thumbnailUrl,
+                                                        })
+                                                      },
+                                                      child: MouseRegion(
+                                                        cursor:
+                                                            SystemMouseCursors
+                                                                .click,
+                                                        child: Stack(
+                                                          alignment:
+                                                              Alignment.center,
+                                                          children: [
+                                                            Container(
+                                                              height: double
+                                                                  .infinity,
+                                                              margin: EdgeInsets
+                                                                  .fromLTRB(
+                                                                0,
+                                                                0,
+                                                                index ==
+                                                                        _readyToOrderFirebaseList.length -
+                                                                            1
+                                                                    ? 0
+                                                                    : 10,
+                                                                0,
+                                                              ),
+                                                              child:
+                                                                  FlickVideoPlayer(
+                                                                flickManager:
+                                                                    flickManagers[
+                                                                        index],
+                                                                flickVideoWithControls:
+                                                                    const FlickVideoWithControls(
+                                                                  videoFit:
+                                                                      BoxFit
+                                                                          .fill,
+                                                                  playerLoadingFallback:
+                                                                      Center(),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            Container(
+                                                              width: desktopView
+                                                                  ? 60
+                                                                  : 35,
+                                                              height:
+                                                                  desktopView
+                                                                      ? 60
+                                                                      : 35,
+                                                              decoration:
+                                                                  BoxDecoration(
                                                                 color: Colors
-                                                                    .black),
-                                                          ),
-                                                          child: Icon(
-                                                            Icons.play_arrow,
-                                                            color: Colors.black,
-                                                            size: desktopView
-                                                                ? 50
-                                                                : 25,
-                                                          ),
+                                                                    .white,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            50),
+                                                                border: Border.all(
+                                                                    width: 2,
+                                                                    color: Colors
+                                                                        .black),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons
+                                                                    .play_arrow,
+                                                                color: Colors
+                                                                    .black,
+                                                                size:
+                                                                    desktopView
+                                                                        ? 50
+                                                                        : 25,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
+                                                      ),
                                                     ),
+                                                  );
+                                                },
+                                              )
+                                            : [
+                                                Center(
+                                                    child: Shimmer.fromColors(
+                                                  baseColor: Colors.grey[300]!,
+                                                  highlightColor:
+                                                      Colors.grey[100]!,
+                                                  child: Container(
+                                                    width: desktopView
+                                                        ? 365
+                                                        : tabletView
+                                                            ? 165
+                                                            : 365,
+                                                    height: desktopView
+                                                        ? 620
+                                                        : tabletView
+                                                            ? 500
+                                                            : 320,
+                                                    color: Colors.grey[300]!,
                                                   ),
-                                                ),
-                                              );
-                                            }),
-                                          ),
-                                        ))),
-                                tabletView
-                                    ? Container()
-                                    : const SizedBox(height: 20),
+                                                ))
+                                              ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                SizedBox(height: desktopView ? 40 : 20),
                                 CategoryLabel(
                                   tabletView: tabletView,
                                   label: 'Opticals',
@@ -695,7 +763,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                       return true;
                                     },
                                     child: Container(
-                                      height: desktopView ? 590 : 470,
+                                      height: desktopView ? 640 : 470,
                                       margin: EdgeInsets.only(
                                           left: tabletView ? 50 : 10,
                                           right: tabletView ? 50 : 10),
@@ -741,11 +809,13 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                 controller: _scrollController,
                                                 scrollDirection:
                                                     Axis.horizontal,
-                                                itemCount: snapshot.data!
-                                                    .length, // Increase the item count by 1
+                                                itemCount:
+                                                    snapshot.data!.length >= 16
+                                                        ? 16
+                                                        : snapshot.data!.length,
                                                 itemBuilder: (context, index) {
                                                   // Check if the current index is 50
-                                                  if (index == 9) {
+                                                  if (index == 15) {
                                                     return Center(
                                                         child: GestureDetector(
                                                       onTap: () => {
@@ -795,10 +865,6 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                       ),
                                                     ));
                                                   } else {
-                                                    int adjustedIndex =
-                                                        index > 50
-                                                            ? index - 1
-                                                            : index;
                                                     return ProductItemWidget(
                                                       tabletView: tabletView,
                                                       mediumTabletView:
@@ -806,8 +872,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                       desktopView: desktopView,
                                                       isHorizontalList: true,
                                                       bestSellerFirebaseList:
-                                                          snapshot.data![
-                                                              adjustedIndex],
+                                                          snapshot.data![index],
                                                       onClickCallBack:
                                                           handleClick,
                                                       routeFromHomeScreen: true,
@@ -818,7 +883,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                             }
                                           }),
                                     )),
-                                SizedBox(height: 30),
+                                SizedBox(height: desktopView ? 30 : 0),
 
                                 bannerImageUrl2.isEmpty
                                     ? Container()
@@ -839,6 +904,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                 HappyCustomerDividerAndLabel(
                                     tabletView: tabletView,
                                     desktopView: desktopView),
+                                SizedBox(height: tabletView ? 50 : 20),
                                 FutureBuilder<List<HappyCustomerFirabaseModel>>(
                                     future: happyCustomerFirebaseList,
                                     builder: (context, snapshot) {
@@ -1006,7 +1072,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                 //     tabletView: tabletView,
                                 //     desktopView: desktopView),
                                 const SizedBox(height: 60),
-                                const Footer(),
+                                Footer(
+                                    onClickCallBack:
+                                        handleClickOnFooterWhatsApp),
                                 const SizedBox(height: 20),
                               ])))
                 ]),
@@ -1444,7 +1512,7 @@ class HappyCustomerDividerAndLabel extends StatelessWidget {
 class HappyCustomerVideoAndGridWidget extends StatefulWidget {
   final bool tabletView, desktopView;
   final List<HappyCustomerFirabaseModel> happyCustomerData;
-  final ValueChanged<String> onClickVideo;
+  final ValueChanged<Map<String, dynamic>> onClickVideo;
   final Widget playIconWidget;
 
   const HappyCustomerVideoAndGridWidget(
@@ -1463,27 +1531,71 @@ class HappyCustomerVideoAndGridWidget extends StatefulWidget {
 
 class _HappyCustomerVideoAndGridWidgetState
     extends State<HappyCustomerVideoAndGridWidget> {
-  Future<void> _updateVideoUrl(String videoUrl, bool videoChanged) async {
+  Future<void> _updateVideoUrl(
+      String videoUrl, String thumbnailUrl, bool videoChanged) async {
     if (widget.happyCustomerData.isNotEmpty) {
-      if (videoChanged) widget.onClickVideo(videoUrl);
+      if (videoChanged) {
+        widget
+            .onClickVideo({'videoUrl': videoUrl, 'thumbnailUrl': thumbnailUrl});
+      }
+    }
+  }
+
+  late List<FlickManager> flickManagers;
+  late FlickManager flickManager;
+  @override
+  void initState() {
+    super.initState();
+    flickManagers = widget.happyCustomerData.map((data) {
+      // Create the VideoPlayerController
+      final videoController =
+          VideoPlayerController.network(data.videoUrl ?? '');
+
+      // Create the FlickManager with the videoController
+      final flickManager = FlickManager(
+          videoPlayerController: videoController
+            ..initialize().then((_) {
+              for (int i = 0; i < flickManagers.length; i++) {
+                _playAndPauseVideo(i);
+              }
+              videoController.addListener(_onVideoPlayerChanged);
+            }));
+
+      return flickManager;
+    }).toList();
+  }
+
+  void _playAndPauseVideo(int index) {
+    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+
+    // Delay and then pause the video
+    Future.delayed(Duration(milliseconds: 100), () {
+      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
+    });
+  }
+
+  void _onVideoPlayerChanged() {
+    final controller = flickManager.flickVideoManager?.videoPlayerController;
+    if (controller != null) {
+      if (controller.value.hasError) {
+        debugPrint("Video player error: ${controller.value.errorDescription}");
+      }
     }
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
+    for (var flickManager in flickManagers) {
+      flickManager.dispose();
+    }
     super.dispose();
   }
 
-  Widget imageContainer(String videoUrl, String thumbnailUrl) {
+  Widget imageContainer(String videoUrl, String thumbnailUrl, int index) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _updateVideoUrl(videoUrl, true);
+          _updateVideoUrl(videoUrl, thumbnailUrl, true);
         });
       },
       child: MouseRegion(
@@ -1493,33 +1605,38 @@ class _HappyCustomerVideoAndGridWidgetState
             width: double.infinity,
             height: double.infinity,
             child: Stack(alignment: Alignment.center, children: [
-              Image.network(
-                thumbnailUrl,
-                fit: BoxFit.fitHeight,
-                loadingBuilder: (BuildContext context, Widget child,
-                    ImageChunkEvent? loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                (loadingProgress.expectedTotalBytes ?? 1)
-                            : null,
-                      ),
-                    );
-                  }
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Error loading image: $error');
-                  return Container(
-                    color: Colors.grey,
-                    child: const Icon(Icons.error, color: Colors.red),
-                  );
-                },
-              ),
-              widget.playIconWidget
+              Container(
+                  width: double.infinity,
+                  height: 250,
+                  child: videoUrl.isNotEmpty
+                      ? FlickVideoPlayer(
+                          flickManager: flickManagers[index],
+                          flickVideoWithControls: const FlickVideoWithControls(
+                            videoFit: BoxFit.fill,
+                          ),
+                        )
+                      : Image.network(
+                          thumbnailUrl,
+                          fit: BoxFit.fill,
+                        )),
+              videoUrl.isNotEmpty ? widget.playIconWidget : Container(),
+              videoUrl.isEmpty
+                  ? Container(
+                      padding: const EdgeInsets.only(
+                          left: 10, right: 10, top: 5, bottom: 5),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white.withOpacity(0.8),
+                          border: Border.all(
+                              width: 1, color: AppColors.cGreenColor)),
+                      child: Text(
+                        'View image',
+                        style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: AppColors.cGreenColor,
+                            fontWeight: FontWeight.bold),
+                      ))
+                  : Container(),
             ]),
           )),
     );
@@ -1535,15 +1652,13 @@ class _HappyCustomerVideoAndGridWidgetState
         minItemsPerRow: 1,
         maxItemsPerRow: 6,
         listViewBuilderOptions: ListViewBuilderOptions(
-          physics: NeverScrollableScrollPhysics(),
+          // physics: NeverScrollableScrollPhysics(),
           shrinkWrap: true,
         ),
         children: List.generate(
             videoDataList.length >= 18 ? 18 : videoDataList.length,
-            (index) => imageContainer(
-                  videoDataList[index].videoUrl,
-                  videoDataList[index].thumbnailUrl,
-                )));
+            (index) => imageContainer(videoDataList[index].videoUrl ?? '',
+                videoDataList[index].thumbnailUrl ?? '', index)));
   }
 
   @override
@@ -1563,8 +1678,11 @@ class _HappyCustomerVideoAndGridWidgetState
               children: [
                 GestureDetector(
                     onTap: () => {
-                          widget.onClickVideo(
-                              widget.happyCustomerData[0].videoUrl)
+                          widget.onClickVideo({
+                            'videoUrl': widget.happyCustomerData[0].videoUrl,
+                            'thumbnailUrl':
+                                widget.happyCustomerData[0].thumbnailUrl
+                          })
                         },
                     child: Stack(alignment: Alignment.center, children: [
                       MouseRegion(
@@ -1582,7 +1700,7 @@ class _HappyCustomerVideoAndGridWidgetState
                                     ? 500
                                     : 620,
                             child: Image.network(
-                              widget.happyCustomerData[0].thumbnailUrl,
+                              widget.happyCustomerData[0].thumbnailUrl!,
                               fit: BoxFit.fill,
                             ),
                           )),
@@ -1596,11 +1714,33 @@ class _HappyCustomerVideoAndGridWidgetState
                                   borderRadius: BorderRadius.circular(50),
                                   border: Border.all(
                                       width: 2, color: Colors.black)),
-                              child: const Icon(
-                                Icons.play_arrow,
-                                color: Colors.black,
-                                size: 50,
-                              )))
+                              child: widget
+                                      .happyCustomerData[0].videoUrl!.isEmpty
+                                  ? Container(
+                                      padding: const EdgeInsets.only(
+                                          left: 10,
+                                          right: 10,
+                                          top: 5,
+                                          bottom: 5),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          color: Colors.white.withOpacity(0.8),
+                                          border: Border.all(
+                                              width: 1,
+                                              color: AppColors.cGreenColor)),
+                                      child: Text(
+                                        'View image',
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 12,
+                                            color: AppColors.cGreenColor,
+                                            fontWeight: FontWeight.bold),
+                                      ))
+                                  : const Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.black,
+                                      size: 50,
+                                    )))
                     ])),
                 const SizedBox(width: 40),
                 Expanded(
@@ -1615,9 +1755,10 @@ class _HappyCustomerVideoAndGridWidgetState
         : Container(
             margin: const EdgeInsets.only(right: 10, left: 10),
             width: double.infinity,
+            height: widget.desktopView ? 550 : 300,
             child: ReadyToOrderListWidget(
                 videoWidth: 188,
-                videoHeight: 283,
+                videoHeight: widget.desktopView ? 550 : 300,
                 happyCustomerData: widget.happyCustomerData,
                 onClickVideo: widget.onClickVideo,
                 desktopView: widget.desktopView));
@@ -1909,13 +2050,13 @@ class ReadyToOrderDividerAndLabel extends StatelessWidget {
                     fontSize: tabletView ? 32 : 12,
                     height: 1.2),
                 children: <TextSpan>[
-                  const TextSpan(text: 'Ready To '),
+                  const TextSpan(text: 'Powered '),
                   TextSpan(
-                    text: 'Order',
+                    text: 'Sunglasses',
                     style: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.w600,
-                      fontSize: tabletView ? 48 : 14,
+                      fontSize: tabletView ? 40 : 14,
                     ),
                   ),
                 ],
@@ -1940,28 +2081,70 @@ class ReadyToOrderListWidget extends StatefulWidget {
   final double videoWidth;
   final double videoHeight;
   final List<HappyCustomerFirabaseModel> happyCustomerData;
-  final ValueChanged<String> onClickVideo;
+  final ValueChanged<Map<String, dynamic>> onClickVideo;
   final bool desktopView;
-  const ReadyToOrderListWidget(
-      {super.key,
-      required this.videoHeight,
-      required this.videoWidth,
-      required this.happyCustomerData,
-      required this.onClickVideo,
-      required this.desktopView});
+
+  const ReadyToOrderListWidget({
+    Key? key,
+    required this.videoHeight,
+    required this.videoWidth,
+    required this.happyCustomerData,
+    required this.onClickVideo,
+    required this.desktopView,
+  }) : super(key: key);
 
   @override
   State<ReadyToOrderListWidget> createState() => _ReadyToOrderListWidgetState();
 }
 
 class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
+  late List<FlickManager> flickManagers;
+  late FlickManager flickManager;
   @override
   void initState() {
     super.initState();
+    flickManagers = widget.happyCustomerData.map((data) {
+      // Create the VideoPlayerController
+      final videoController =
+          VideoPlayerController.network(data.videoUrl ?? '');
+
+      // Create the FlickManager with the videoController
+      final flickManager = FlickManager(
+          videoPlayerController: videoController
+            ..initialize().then((_) {
+              for (int i = 0; i < flickManagers.length; i++) {
+                _playAndPauseVideo(i);
+              }
+              videoController.addListener(_onVideoPlayerChanged);
+            }));
+
+      return flickManager;
+    }).toList();
+  }
+
+  void _playAndPauseVideo(int index) {
+    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+
+    // Delay and then pause the video
+    Future.delayed(Duration(milliseconds: 100), () {
+      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
+    });
+  }
+
+  void _onVideoPlayerChanged() {
+    final controller = flickManager.flickVideoManager?.videoPlayerController;
+    if (controller != null) {
+      if (controller.value.hasError) {
+        debugPrint("Video player error: ${controller.value.errorDescription}");
+      }
+    }
   }
 
   @override
   void dispose() {
+    for (var flickManager in flickManagers) {
+      flickManager.dispose();
+    }
     super.dispose();
   }
 
@@ -1975,40 +2158,78 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
         itemCount: widget.happyCustomerData.length,
         itemBuilder: (context, index) {
           return GestureDetector(
-              onTap: () => {
-                    widget
-                        .onClickVideo(widget.happyCustomerData[index].videoUrl),
-                  },
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Stack(alignment: Alignment.center, children: [
+            onTap: () => widget.onClickVideo({
+              'videoUrl': widget.happyCustomerData[index].videoUrl ?? '',
+              'thumbnailUrl': widget.happyCustomerData[index].thumbnailUrl,
+            }),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
                   Container(
-                    width: widget.videoWidth == 188 ? 160 : 350,
-                    height: double.infinity,
+                    width: widget.desktopView ? 288 : 180,
+                    height: widget.desktopView ? 550 : 300,
                     margin: EdgeInsets.fromLTRB(
                       0,
-                      20,
+                      0,
                       index == widget.happyCustomerData.length - 1 ? 0 : 10,
                       0,
                     ),
-                    child: Image.network(
-                        widget.happyCustomerData[index].thumbnailUrl,
-                        fit: BoxFit.fill),
+                    child: widget.happyCustomerData[index].videoUrl != null
+                        ? FlickVideoPlayer(
+                            flickManager: flickManagers[index],
+                            flickVideoWithControls:
+                                const FlickVideoWithControls(
+                              videoFit: BoxFit.fill,
+                              playerLoadingFallback: Center(),
+                            ),
+                          )
+                        : Image.network(
+                            widget.happyCustomerData[index].thumbnailUrl!,
+                            fit: BoxFit.fill,
+                          ),
                   ),
-                  Container(
-                      width: widget.desktopView ? 60 : 35,
-                      height: widget.desktopView ? 60 : 35,
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(width: 2, color: Colors.black)),
-                      child: Icon(
-                        Icons.play_arrow,
-                        color: Colors.black,
-                        size: widget.desktopView ? 50 : 25,
-                      ))
-                ]),
-              ));
+                  widget.happyCustomerData[index].videoUrl == null
+                      ? Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.only(right: 10, top: 10),
+                          width: 100,
+                          height: 30,
+                          padding: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5, bottom: 5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.white.withOpacity(0.8),
+                              border: Border.all(
+                                  width: 1, color: AppColors.cGreenColor)),
+                          child: Text(
+                            textAlign: TextAlign.center,
+                            'View image',
+                            style: GoogleFonts.outfit(
+                                color: AppColors.cGreenColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        )
+                      : Container(
+                          width: widget.desktopView ? 60 : 35,
+                          height: widget.desktopView ? 60 : 35,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(50),
+                              border:
+                                  Border.all(width: 2, color: Colors.black)),
+                          child: Icon(
+                            Icons.play_arrow,
+                            color: Colors.black,
+                            size: widget.desktopView ? 50 : 25,
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          );
         },
       ),
     );
@@ -2134,7 +2355,7 @@ class BuyBrandedSunglassesBanner extends StatelessWidget {
 
 class AboutJpOpticalWidget extends StatefulWidget {
   final bool tabletView, mediumTabletView, mobileView, desktopView;
-  final ValueChanged<String> onClickVideo;
+  final ValueChanged<Map<String, dynamic>> onClickVideo;
   final Widget playIconWidget;
   const AboutJpOpticalWidget(
       {Key? key,
@@ -2307,7 +2528,7 @@ class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
                 height: 10,
               ),
               Container(
-                  width: widget.desktopView ? 500 : double.infinity,
+                  width: double.infinity,
                   child: Text(
                     "At JP OPTICALS, we are dedicated to providing you with the highest quality optical products, watches, men's clothing, and accessories. Our mission is to help you see better and look great. With years of experience in the optical, watch, and fashion industry, we pride ourselves on offering exceptional customer service and a wide range of products to suit every style and need. Whether you're looking for the perfect pair of glasses, a stylish watch, or the latest in men's fashion, JP OPTICALS has you covered.",
                     style: GoogleFonts.outfit(
@@ -2512,7 +2733,8 @@ class StoreLocationMapWidget extends StatelessWidget {
 }
 
 class Footer extends StatelessWidget {
-  const Footer({Key? key}) : super(key: key);
+  final ValueChanged<Map<String, dynamic>> onClickCallBack;
+  const Footer({Key? key, required this.onClickCallBack}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -2529,7 +2751,9 @@ class Footer extends StatelessWidget {
                   height: 20,
                   width: 20,
                 ),
-                onPressed: () => redirectUri('', 'normalWhatsAppContact', ''),
+                onPressed: () => onClickCallBack({
+                  'action': 'close',
+                }),
               ),
               IconButton(
                 icon: Image.asset(
@@ -2547,22 +2771,22 @@ class Footer extends StatelessWidget {
                 ),
                 onPressed: () => redirectUri('', 'facebook', ''),
               ),
-              IconButton(
-                icon: Image.asset(
-                  'assets/icons/snapchat.png',
-                  height: 20,
-                  width: 20,
-                ),
-                onPressed: () => redirectUri('', 'snapchat', ''),
-              ),
-              IconButton(
-                icon: SvgPicture.asset(
-                  'assets/icons/youtube_icon.svg',
-                  height: 20,
-                  width: 20,
-                ),
-                onPressed: () => redirectUri('', 'youtube', ''),
-              ),
+              // IconButton(
+              //   icon: Image.asset(
+              //     'assets/icons/snapchat.png',
+              //     height: 20,
+              //     width: 20,
+              //   ),
+              //   onPressed: () => redirectUri('', 'snapchat', ''),
+              // ),
+              // IconButton(
+              //   icon: SvgPicture.asset(
+              //     'assets/icons/youtube_icon.svg',
+              //     height: 20,
+              //     width: 20,
+              //   ),
+              //   onPressed: () => redirectUri('', 'youtube', ''),
+              // ),
             ],
           ),
           Text('© ${DateTime.now().year} JP Opticals. All rights reserved.',
