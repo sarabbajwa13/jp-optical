@@ -237,7 +237,9 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
     var mediumTabletView = screenSize.width > 820;
     var desktopView = screenSize.width > 1300;
     return Scaffold(
-        body: Stack(children: [
+        body: Stack(
+           alignment: Alignment.topRight,
+          children: [
       Column(
         children: [
           Header(
@@ -285,7 +287,11 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
                             final isSelected =
                                 selectedCategory == category.productListName;
 
-                            return GestureDetector(
+                            return InkWell(
+                               splashColor: Colors.transparent, // Removes the splash color
+  highlightColor: Colors.transparent, // Removes the highlight color
+  radius: 0, // Optionally adjust the radius if needed
+  
                                 onTap: () => {
                                       if (!isSelected)
                                         {
@@ -303,9 +309,7 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
                                               category.productListName)
                                         }
                                     },
-                                child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: Container(
+                                child:  Container(
                                         margin: EdgeInsets.only(
                                             left: 20,
                                             right: index ==
@@ -348,7 +352,7 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
                                                   color: Colors.black),
                                             ),
                                           ],
-                                        ))));
+                                        )));
                           });
                     }
                   })),

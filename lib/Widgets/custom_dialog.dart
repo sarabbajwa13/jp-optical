@@ -130,7 +130,7 @@ class CustomDialog extends StatelessWidget {
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black),
                                           ),
-                                          GestureDetector(
+                                          InkWell(
                                               onTap: () => { 
                                                    onConfirm({
                                                       'action': RedirectionString.firstMobileNumber,
@@ -140,13 +140,10 @@ class CustomDialog extends StatelessWidget {
                                                       'productSize': data['productSize'] ?? '',
                                                     }),
                                                   },
-                                              child: MouseRegion(
-                                                  cursor:
-                                                      SystemMouseCursors.click,
-                                                  child: whatsNumberWidget(
+                                              child:  whatsNumberWidget(
                                                       RedirectionString
                                                           .firstMobileNumber,
-                                                      tabletView, false))),
+                                                      tabletView, false)),
                                         ],
                                       ),
                                       const SizedBox(height: 25),
@@ -159,7 +156,7 @@ class CustomDialog extends StatelessWidget {
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black),
                                           ),
-                                      GestureDetector(
+                                      InkWell(
                                           onTap: () => {
                                                 onConfirm({
                                                       'action': RedirectionString.secondMobileNumber,
@@ -169,12 +166,10 @@ class CustomDialog extends StatelessWidget {
                                                       'productSize': data['productSize'] ?? '',
                                                     }),
                                               },
-                                          child: MouseRegion(
-                                              cursor: SystemMouseCursors.click,
-                                              child: whatsNumberWidget(
+                                          child:   whatsNumberWidget(
                                                   RedirectionString
                                                       .secondMobileNumber,
-                                                  tabletView, true)))]),
+                                                  tabletView, true))]),
                                       const SizedBox(
                                         height: 15,
                                       )

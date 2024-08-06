@@ -179,9 +179,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
   }
 
   Widget menButtonWidget(bool tabletView) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Container(
+    return   Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         padding: const EdgeInsets.only(top: 5, bottom: 5),
         alignment: Alignment.center,
@@ -201,14 +199,12 @@ class _ProductlistscreenState extends State<Productlistscreen> {
             color: Colors.black,
           ),
         ),
-      ),
+   
     );
   }
 
   Widget womenButtonWidget(bool tabletView) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Container(
+    return   Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         padding: const EdgeInsets.only(top: 5, bottom: 5),
         alignment: Alignment.center,
@@ -228,7 +224,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
             color: Colors.black,
           ),
         ),
-      ),
+     
     );
   }
 
@@ -261,7 +257,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
                   ? Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
+                          child: InkWell(
                             onTap: () {
                               setState(() {
                                 if (!isMenTabSelected) {
@@ -286,7 +282,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
                           ),
                         ),
                         Expanded(
-                          child: GestureDetector(
+                          child: InkWell(
                             onTap: () {
                               setState(() {
                                 if (!isWomenTabSelected) {

@@ -165,16 +165,14 @@ class _CartScreenState extends State<CartScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
+                  InkWell(
                         onTap: () => {widget.onCloseCallBack('desktopView')},
                         child: const Icon(
                           Icons.close,
                           color: Colors.black,
                           size: 30,
                         ),
-                      )),
+                      ),
                 ],
               ),
               SizedBox(height: 10),
@@ -266,10 +264,7 @@ Widget cartItemWidget(
                    
                   SizedBox(height: 15),
                   Row(
-                    children: [
-                      MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
+                    children: [  InkWell(
                               onTap: () => {updateQuantity(item, -1)},
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -281,7 +276,7 @@ Widget cartItemWidget(
                                   ),
                                 ),
                                 child: const Icon(Icons.remove ,size: 15, color: Colors.black,
-                                ),
+                                
                               ))),
                       Container(
                         width: 50,
@@ -307,9 +302,7 @@ Widget cartItemWidget(
                           ),
                         ),
                       ),
-                      MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
+                      InkWell(
                               onTap: () => {updateQuantity(item, 1)},
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -322,23 +315,20 @@ Widget cartItemWidget(
                                 ),
                                 child: const Icon(Icons.add ,size: 15, color: Colors.black,
                                 ),
-                              ))),
+                              )),
                     ],
                   ),
                 ],
               ),
             ),
             Column(
-              children: [
-                MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
+              children: [ InkWell(
                         onTap: () => {removeItem(item)},
                         child: Text(
                           'Remove',
                           style: GoogleFonts.outfit(
                               color: Colors.red, fontWeight: FontWeight.bold),
-                        )))
+                        ))
               ],
             )
           ],

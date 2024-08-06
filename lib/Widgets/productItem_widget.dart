@@ -199,7 +199,7 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  GestureDetector(
+                  InkWell(
                     onTap: () => {
                       widget.onClickCallBack({
                         'action': 'imageUrl',
@@ -276,7 +276,7 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
                                       .bestSellerFirebaseList.size![index];
                                   final isSelected = size == selectedSize;
 
-                                  return GestureDetector(
+                                  return InkWell(
                                     onTap: () {
                                       setState(() {
                                         selectedSize = size;

@@ -603,7 +603,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                     width:
                                                         desktopView ? 288 : 180,
                                                     height: double.infinity,
-                                                    child: GestureDetector(
+                                                    child: InkWell(
                                                       onTap: () => {
                                                         navigateToVideoPlayerScreen({
                                                           'videoUrl':
@@ -616,11 +616,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                                   .thumbnailUrl,
                                                         })
                                                       },
-                                                      child: MouseRegion(
-                                                        cursor:
-                                                            SystemMouseCursors
-                                                                .click,
-                                                        child: Stack(
+                                                      child: Stack(
                                                           alignment:
                                                               Alignment.center,
                                                           children: [
@@ -688,7 +684,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                           ],
                                                         ),
                                                       ),
-                                                    ),
+                                                     
                                                   );
                                                 },
                                               )
@@ -817,18 +813,14 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                   // Check if the current index is 50
                                                   if (index == 15) {
                                                     return Center(
-                                                        child: GestureDetector(
+                                                        child: InkWell(
                                                       onTap: () => {
                                                         handleNavigation(
                                                             Endpoints
                                                                 .bestSellersList,
                                                             'Best Seller')
                                                       },
-                                                      child: MouseRegion(
-                                                        cursor:
-                                                            SystemMouseCursors
-                                                                .click,
-                                                        child: Container(
+                                                      child:  Container(
                                                           height: desktopView
                                                               ? 100
                                                               : 50,
@@ -862,7 +854,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                                     .black),
                                                           ),
                                                         ),
-                                                      ),
+                                                     
                                                     ));
                                                   } else {
                                                     return ProductItemWidget(
@@ -1592,15 +1584,13 @@ class _HappyCustomerVideoAndGridWidgetState
   }
 
   Widget imageContainer(String videoUrl, String thumbnailUrl, int index) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         setState(() {
           _updateVideoUrl(videoUrl, thumbnailUrl, true);
         });
       },
-      child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Container(
+      child:   Container(
             margin: const EdgeInsets.all(8),
             width: double.infinity,
             height: double.infinity,
@@ -1638,7 +1628,7 @@ class _HappyCustomerVideoAndGridWidgetState
                       ))
                   : Container(),
             ]),
-          )),
+          ),
     );
   }
 
@@ -1676,7 +1666,7 @@ class _HappyCustomerVideoAndGridWidgetState
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                GestureDetector(
+                InkWell(
                     onTap: () => {
                           widget.onClickVideo({
                             'videoUrl': widget.happyCustomerData[0].videoUrl,
@@ -1685,9 +1675,7 @@ class _HappyCustomerVideoAndGridWidgetState
                           })
                         },
                     child: Stack(alignment: Alignment.center, children: [
-                      MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: Container(
+                       Container(
                             margin: EdgeInsets.only(top: 10),
                             width: widget.desktopView
                                 ? 365
@@ -1703,10 +1691,8 @@ class _HappyCustomerVideoAndGridWidgetState
                               widget.happyCustomerData[0].thumbnailUrl!,
                               fit: BoxFit.fill,
                             ),
-                          )),
-                      MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: Container(
+                          ),
+                        Container(
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
@@ -1740,7 +1726,7 @@ class _HappyCustomerVideoAndGridWidgetState
                                       Icons.play_arrow,
                                       color: Colors.black,
                                       size: 50,
-                                    )))
+                                    ))
                     ])),
                 const SizedBox(width: 40),
                 Expanded(
@@ -1815,9 +1801,7 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
             bottom: tabletView ? 40 : 20),
         child: Row(children: [
           Expanded(
-              child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
+              child:  InkWell(
                       onTap: () => {onClickCallBack('Men')},
                       child: Stack(alignment: Alignment.bottomRight, children: [
                         Container(
@@ -1855,14 +1839,12 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
                                 color: Colors.white),
                           ),
                         )
-                      ])))),
+                      ]))),
           SizedBox(
             width: desktopView ? 30 : 10,
           ),
           Expanded(
-              child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
+              child: InkWell(
                 onTap: () => {onClickCallBack('Women')},
                 child: Stack(alignment: Alignment.bottomRight, children: [
                   Container(
@@ -1898,7 +1880,7 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
                     ),
                   )
                 ])),
-          ))
+          )
         ]));
   }
 }
@@ -1922,9 +1904,7 @@ class MenClothBanner extends StatelessWidget {
             right: tabletView ? 60 : 10,
             top: tabletView ? 40 : 20,
             bottom: tabletView ? 40 : 20),
-        child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
+        child:  InkWell(
                 onTap: () => {onClickCallBack('Clothing and accessories')},
                 child: Stack(alignment: Alignment.bottomRight, children: [
                   Container(
@@ -1963,7 +1943,7 @@ class MenClothBanner extends StatelessWidget {
                           color: Colors.white),
                     ),
                   )
-                ]))));
+                ])));
   }
 }
 
@@ -2157,14 +2137,12 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
         scrollDirection: Axis.horizontal,
         itemCount: widget.happyCustomerData.length,
         itemBuilder: (context, index) {
-          return GestureDetector(
+          return InkWell(
             onTap: () => widget.onClickVideo({
               'videoUrl': widget.happyCustomerData[index].videoUrl ?? '',
               'thumbnailUrl': widget.happyCustomerData[index].thumbnailUrl,
             }),
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: Stack(
+            child:   Stack(
                 alignment: Alignment.center,
                 children: [
                   Container(
@@ -2228,7 +2206,7 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
                         ),
                 ],
               ),
-            ),
+          
           );
         },
       ),
@@ -2452,7 +2430,7 @@ class _AboutJpOpticalWidgetState extends State<AboutJpOpticalWidget> {
           //           ),
           //         ));
           //       } else {
-          //         return GestureDetector(
+          //         return InkWell(
           //             onTap: () =>
           //                 {widget.onClickVideo(snapshot.data![0].videoUrl)},
           //             child: Stack(alignment: Alignment.center, children: [

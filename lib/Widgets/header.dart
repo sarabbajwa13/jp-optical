@@ -36,9 +36,7 @@ class _HeaderState extends State<Header> {
 
   Widget cartIcon(CartService cartService, bool tabletView) {
     final isEmptyCart = cartService.isEmptyCart;
-    return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Image.asset(
+    return Image.asset(
           isEmptyCart
               ? 'assets/icons/empty_cart_icon.png'
               : 'assets/icons/not_empty_cart_icon.png',
@@ -54,7 +52,7 @@ class _HeaderState extends State<Header> {
                   : 30,
           color: isEmptyCart ? Colors.white : null,
           colorBlendMode: isEmptyCart ? BlendMode.srcIn : null,
-        ));
+        );
   }
 
   Widget hamburgerWidget(BuildContext cart, bool tabletView) {
@@ -92,7 +90,7 @@ class _HeaderState extends State<Header> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               widget.routeFromHome
-                  ? GestureDetector(
+                  ? InkWell(
                       onTap: () => {widget.onClickHamburger('show_drawer')},
                       child: hamburgerWidget(context, tabletView))
                   : backArrowWidget(context),
@@ -136,7 +134,7 @@ class _HeaderState extends State<Header> {
                               ))
                         ],
                       ))),
-              GestureDetector(
+              InkWell(
                   onTap: () => {widget.onClickHamburger('show_cart')},
                   child: cartIcon(cartService, tabletView)),
             ],
