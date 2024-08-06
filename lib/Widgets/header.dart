@@ -37,22 +37,22 @@ class _HeaderState extends State<Header> {
   Widget cartIcon(CartService cartService, bool tabletView) {
     final isEmptyCart = cartService.isEmptyCart;
     return Image.asset(
-          isEmptyCart
-              ? 'assets/icons/empty_cart_icon.png'
-              : 'assets/icons/not_empty_cart_icon.png',
-          width: isEmptyCart & tabletView
+      isEmptyCart
+          ? 'assets/icons/empty_cart_icon.png'
+          : 'assets/icons/not_empty_cart_icon.png',
+      width: isEmptyCart & tabletView
+          ? 40
+          : !isEmptyCart & tabletView
               ? 40
-              : !isEmptyCart & tabletView
-                  ? 40
-                  : 30,
-          height: isEmptyCart & tabletView
+              : 30,
+      height: isEmptyCart & tabletView
+          ? 40
+          : !isEmptyCart & tabletView
               ? 40
-              : !isEmptyCart & tabletView
-                  ? 40
-                  : 30,
-          color: isEmptyCart ? Colors.white : null,
-          colorBlendMode: isEmptyCart ? BlendMode.srcIn : null,
-        );
+              : 30,
+      color: isEmptyCart ? Colors.white : null,
+      colorBlendMode: isEmptyCart ? BlendMode.srcIn : null,
+    );
   }
 
   Widget hamburgerWidget(BuildContext cart, bool tabletView) {
@@ -89,11 +89,9 @@ class _HeaderState extends State<Header> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              widget.routeFromHome
-                  ? InkWell(
-                      onTap: () => {widget.onClickHamburger('show_drawer')},
-                      child: hamburgerWidget(context, tabletView))
-                  : backArrowWidget(context),
+              InkWell(
+                  onTap: () => {widget.onClickHamburger('show_drawer')},
+                  child: hamburgerWidget(context, tabletView)),
               Expanded(
                   child: Container(
                       margin: EdgeInsets.only(left: tabletView ? 0 : 35),

@@ -135,9 +135,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
               videoPlayerController: videoController
                 ..initialize().then((_) {
                   // Play and then pause the video after a delay
-                  for (int i = 0; i < flickManagers.length; i++) {
-                    _playAndPauseVideo(i);
-                  }
+                  // for (int i = 0; i < flickManagers.length; i++) {
+                  //   _playAndPauseVideo(i);
+                  // }
                 }),
             );
           }).toList();
@@ -617,74 +617,70 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                         })
                                                       },
                                                       child: Stack(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          children: [
-                                                            Container(
-                                                              height: double
-                                                                  .infinity,
-                                                              margin: EdgeInsets
-                                                                  .fromLTRB(
-                                                                0,
-                                                                0,
-                                                                index ==
-                                                                        _readyToOrderFirebaseList.length -
-                                                                            1
-                                                                    ? 0
-                                                                    : 10,
-                                                                0,
-                                                              ),
-                                                              child:
-                                                                  FlickVideoPlayer(
-                                                                flickManager:
-                                                                    flickManagers[
-                                                                        index],
-                                                                flickVideoWithControls:
-                                                                    const FlickVideoWithControls(
-                                                                  videoFit:
-                                                                      BoxFit
-                                                                          .fill,
-                                                                  playerLoadingFallback:
-                                                                      Center(),
-                                                                ),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        children: [
+                                                          Container(
+                                                            height:
+                                                                double.infinity,
+                                                            margin: EdgeInsets
+                                                                .fromLTRB(
+                                                              0,
+                                                              0,
+                                                              index ==
+                                                                      _readyToOrderFirebaseList
+                                                                              .length -
+                                                                          1
+                                                                  ? 0
+                                                                  : 10,
+                                                              0,
+                                                            ),
+                                                            child:
+                                                                FlickVideoPlayer(
+                                                              flickManager:
+                                                                  flickManagers[
+                                                                      index],
+                                                              flickVideoWithControls:
+                                                                  const FlickVideoWithControls(
+                                                                videoFit:
+                                                                    BoxFit.fill,
+                                                                playerLoadingFallback:
+                                                                    Center(),
                                                               ),
                                                             ),
-                                                            Container(
-                                                              width: desktopView
-                                                                  ? 60
-                                                                  : 35,
-                                                              height:
-                                                                  desktopView
-                                                                      ? 60
-                                                                      : 35,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                color: Colors
-                                                                    .white,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            50),
-                                                                border: Border.all(
-                                                                    width: 2,
-                                                                    color: Colors
-                                                                        .black),
-                                                              ),
-                                                              child: Icon(
-                                                                Icons
-                                                                    .play_arrow,
-                                                                color: Colors
-                                                                    .black,
-                                                                size:
-                                                                    desktopView
-                                                                        ? 50
-                                                                        : 25,
-                                                              ),
+                                                          ),
+                                                          Container(
+                                                            width: desktopView
+                                                                ? 60
+                                                                : 35,
+                                                            height: desktopView
+                                                                ? 60
+                                                                : 35,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color:
+                                                                  Colors.white,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          50),
+                                                              border: Border.all(
+                                                                  width: 2,
+                                                                  color: Colors
+                                                                      .black),
                                                             ),
-                                                          ],
-                                                        ),
+                                                            child: Icon(
+                                                              Icons.play_arrow,
+                                                              color:
+                                                                  Colors.black,
+                                                              size: desktopView
+                                                                  ? 50
+                                                                  : 25,
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
-                                                     
+                                                    ),
                                                   );
                                                 },
                                               )
@@ -820,41 +816,40 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                                                 .bestSellersList,
                                                             'Best Seller')
                                                       },
-                                                      child:  Container(
-                                                          height: desktopView
-                                                              ? 100
-                                                              : 50,
-                                                          width: desktopView
-                                                              ? 150
-                                                              : 100,
-                                                          alignment:
-                                                              Alignment.center,
-                                                          decoration: BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8),
-                                                              color:
-                                                                  Colors.white,
-                                                              border: Border.all(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey)),
-                                                          child: Text(
-                                                            'View more >',
-                                                            style: GoogleFonts.outfit(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    desktopView
-                                                                        ? 20
-                                                                        : 12,
+                                                      child: Container(
+                                                        height: desktopView
+                                                            ? 100
+                                                            : 50,
+                                                        width: desktopView
+                                                            ? 150
+                                                            : 100,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        decoration: BoxDecoration(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
+                                                            color: Colors.white,
+                                                            border: Border.all(
+                                                                width: 1,
                                                                 color: Colors
-                                                                    .black),
-                                                          ),
+                                                                    .grey)),
+                                                        child: Text(
+                                                          'View more >',
+                                                          style: GoogleFonts
+                                                              .outfit(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize:
+                                                                      desktopView
+                                                                          ? 20
+                                                                          : 12,
+                                                                  color: Colors
+                                                                      .black),
                                                         ),
-                                                     
+                                                      ),
                                                     ));
                                                   } else {
                                                     return ProductItemWidget(
@@ -1547,9 +1542,9 @@ class _HappyCustomerVideoAndGridWidgetState
       final flickManager = FlickManager(
           videoPlayerController: videoController
             ..initialize().then((_) {
-              for (int i = 0; i < flickManagers.length; i++) {
-                _playAndPauseVideo(i);
-              }
+              // for (int i = 0; i < flickManagers.length; i++) {
+              //   _playAndPauseVideo(i);
+              // }
               videoController.addListener(_onVideoPlayerChanged);
             }));
 
@@ -1590,45 +1585,45 @@ class _HappyCustomerVideoAndGridWidgetState
           _updateVideoUrl(videoUrl, thumbnailUrl, true);
         });
       },
-      child:   Container(
-            margin: const EdgeInsets.all(8),
-            width: double.infinity,
-            height: double.infinity,
-            child: Stack(alignment: Alignment.center, children: [
-              Container(
-                  width: double.infinity,
-                  height: 250,
-                  child: videoUrl.isNotEmpty
-                      ? FlickVideoPlayer(
-                          flickManager: flickManagers[index],
-                          flickVideoWithControls: const FlickVideoWithControls(
-                            videoFit: BoxFit.fill,
-                          ),
-                        )
-                      : Image.network(
-                          thumbnailUrl,
-                          fit: BoxFit.fill,
-                        )),
-              videoUrl.isNotEmpty ? widget.playIconWidget : Container(),
-              videoUrl.isEmpty
-                  ? Container(
-                      padding: const EdgeInsets.only(
-                          left: 10, right: 10, top: 5, bottom: 5),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.white.withOpacity(0.8),
-                          border: Border.all(
-                              width: 1, color: AppColors.cGreenColor)),
-                      child: Text(
-                        'View image',
-                        style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: AppColors.cGreenColor,
-                            fontWeight: FontWeight.bold),
-                      ))
-                  : Container(),
-            ]),
-          ),
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        width: double.infinity,
+        height: double.infinity,
+        child: Stack(alignment: Alignment.center, children: [
+          Container(
+              width: double.infinity,
+              height: 250,
+              child: videoUrl.isNotEmpty
+                  ? FlickVideoPlayer(
+                      flickManager: flickManagers[index],
+                      flickVideoWithControls: const FlickVideoWithControls(
+                        videoFit: BoxFit.fill,
+                      ),
+                    )
+                  : Image.network(
+                      thumbnailUrl,
+                      fit: BoxFit.fill,
+                    )),
+          videoUrl.isNotEmpty ? widget.playIconWidget : Container(),
+          videoUrl.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.only(
+                      left: 10, right: 10, top: 5, bottom: 5),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withOpacity(0.8),
+                      border:
+                          Border.all(width: 1, color: AppColors.cGreenColor)),
+                  child: Text(
+                    'View image',
+                    style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: AppColors.cGreenColor,
+                        fontWeight: FontWeight.bold),
+                  ))
+              : Container(),
+        ]),
+      ),
     );
   }
 
@@ -1675,58 +1670,53 @@ class _HappyCustomerVideoAndGridWidgetState
                           })
                         },
                     child: Stack(alignment: Alignment.center, children: [
-                       Container(
-                            margin: EdgeInsets.only(top: 10),
-                            width: widget.desktopView
-                                ? 365
-                                : widget.tabletView
-                                    ? 165
-                                    : 365,
-                            height: widget.desktopView
-                                ? 650
-                                : widget.tabletView
-                                    ? 500
-                                    : 620,
-                            child: Image.network(
-                              widget.happyCustomerData[0].thumbnailUrl!,
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(
-                                      width: 2, color: Colors.black)),
-                              child: widget
-                                      .happyCustomerData[0].videoUrl!.isEmpty
-                                  ? Container(
-                                      padding: const EdgeInsets.only(
-                                          left: 10,
-                                          right: 10,
-                                          top: 5,
-                                          bottom: 5),
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          color: Colors.white.withOpacity(0.8),
-                                          border: Border.all(
-                                              width: 1,
-                                              color: AppColors.cGreenColor)),
-                                      child: Text(
-                                        'View image',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 12,
-                                            color: AppColors.cGreenColor,
-                                            fontWeight: FontWeight.bold),
-                                      ))
-                                  : const Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.black,
-                                      size: 50,
-                                    ))
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        width: widget.desktopView
+                            ? 365
+                            : widget.tabletView
+                                ? 165
+                                : 365,
+                        height: widget.desktopView
+                            ? 650
+                            : widget.tabletView
+                                ? 500
+                                : 620,
+                        child: Image.network(
+                          widget.happyCustomerData[0].thumbnailUrl!,
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                      Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(50),
+                              border:
+                                  Border.all(width: 2, color: Colors.black)),
+                          child: widget.happyCustomerData[0].videoUrl!.isEmpty
+                              ? Container(
+                                  padding: const EdgeInsets.only(
+                                      left: 10, right: 10, top: 5, bottom: 5),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      color: Colors.white.withOpacity(0.8),
+                                      border: Border.all(
+                                          width: 1,
+                                          color: AppColors.cGreenColor)),
+                                  child: Text(
+                                    'View image',
+                                    style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        color: AppColors.cGreenColor,
+                                        fontWeight: FontWeight.bold),
+                                  ))
+                              : const Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.black,
+                                  size: 50,
+                                ))
                     ])),
                 const SizedBox(width: 40),
                 Expanded(
@@ -1801,50 +1791,50 @@ class MenWomenContainerBelowCategory extends StatelessWidget {
             bottom: tabletView ? 40 : 20),
         child: Row(children: [
           Expanded(
-              child:  InkWell(
-                      onTap: () => {onClickCallBack('Men')},
-                      child: Stack(alignment: Alignment.bottomRight, children: [
-                        Container(
-                            height: desktopView
-                                ? 350
-                                : tabletView
-                                    ? 250
-                                    : 120,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  'assets/images/men_banner.jpeg',
-                                  width: double.infinity,
-                                  fit: BoxFit.fill,
-                                ))),
-                        Container(
-                          padding: EdgeInsets.only(
-                              left: desktopView ? 40 : 20,
-                              right: desktopView ? 40 : 20,
-                              top: 5,
-                              bottom: 5),
-                          decoration: const BoxDecoration(
-                              color: AppColors.cGreenColor,
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(8),
-                                  bottomRight: Radius.circular(8))),
-                          child: Text(
-                            'Men',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: tabletView ? 30 : 14,
-                                color: Colors.white),
-                          ),
-                        )
-                      ]))),
+              child: InkWell(
+                  onTap: () => {onClickCallBack('Men')},
+                  child: Stack(alignment: Alignment.bottomRight, children: [
+                    Container(
+                        height: desktopView
+                            ? 350
+                            : tabletView
+                                ? 250
+                                : 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              'assets/images/men_banner.jpeg',
+                              width: double.infinity,
+                              fit: BoxFit.fill,
+                            ))),
+                    Container(
+                      padding: EdgeInsets.only(
+                          left: desktopView ? 40 : 20,
+                          right: desktopView ? 40 : 20,
+                          top: 5,
+                          bottom: 5),
+                      decoration: const BoxDecoration(
+                          color: AppColors.cGreenColor,
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              bottomRight: Radius.circular(8))),
+                      child: Text(
+                        'Men',
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: tabletView ? 30 : 14,
+                            color: Colors.white),
+                      ),
+                    )
+                  ]))),
           SizedBox(
             width: desktopView ? 30 : 10,
           ),
           Expanded(
-              child: InkWell(
+            child: InkWell(
                 onTap: () => {onClickCallBack('Women')},
                 child: Stack(alignment: Alignment.bottomRight, children: [
                   Container(
@@ -1904,46 +1894,46 @@ class MenClothBanner extends StatelessWidget {
             right: tabletView ? 60 : 10,
             top: tabletView ? 40 : 20,
             bottom: tabletView ? 40 : 20),
-        child:  InkWell(
-                onTap: () => {onClickCallBack('Clothing and accessories')},
-                child: Stack(alignment: Alignment.bottomRight, children: [
-                  Container(
-                      height: desktopView
-                          ? 500
-                          : tabletView
-                              ? 450
-                              : 150,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'assets/images/men_cloth_banner.png',
-                            width: double.infinity,
-                            fit: BoxFit.fitHeight,
-                          ))),
-                  Container(
-                    padding: EdgeInsets.only(
-                        left: desktopView ? 30 : 10,
-                        right: desktopView ? 30 : 10,
-                        top: 5,
-                        bottom: 5),
-                    decoration: const BoxDecoration(
-                        color: AppColors.cGreenColor,
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            bottomRight: Radius.circular(8))),
-                    child: Text(
-                      'Men wear & Accessories',
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: tabletView ? 30 : 14,
-                          color: Colors.white),
-                    ),
-                  )
-                ])));
+        child: InkWell(
+            onTap: () => {onClickCallBack('Clothing and accessories')},
+            child: Stack(alignment: Alignment.bottomRight, children: [
+              Container(
+                  height: desktopView
+                      ? 500
+                      : tabletView
+                          ? 450
+                          : 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/images/men_cloth_banner.png',
+                        width: double.infinity,
+                        fit: BoxFit.fitHeight,
+                      ))),
+              Container(
+                padding: EdgeInsets.only(
+                    left: desktopView ? 30 : 10,
+                    right: desktopView ? 30 : 10,
+                    top: 5,
+                    bottom: 5),
+                decoration: const BoxDecoration(
+                    color: AppColors.cGreenColor,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8))),
+                child: Text(
+                  'Men wear & Accessories',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: tabletView ? 30 : 14,
+                      color: Colors.white),
+                ),
+              )
+            ])));
   }
 }
 
@@ -2092,9 +2082,9 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
       final flickManager = FlickManager(
           videoPlayerController: videoController
             ..initialize().then((_) {
-              for (int i = 0; i < flickManagers.length; i++) {
-                _playAndPauseVideo(i);
-              }
+              // for (int i = 0; i < flickManagers.length; i++) {
+              //   _playAndPauseVideo(i);
+              // }
               videoController.addListener(_onVideoPlayerChanged);
             }));
 
@@ -2142,71 +2132,68 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
               'videoUrl': widget.happyCustomerData[index].videoUrl ?? '',
               'thumbnailUrl': widget.happyCustomerData[index].thumbnailUrl,
             }),
-            child:   Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: widget.desktopView ? 288 : 180,
-                    height: widget.desktopView ? 550 : 300,
-                    margin: EdgeInsets.fromLTRB(
-                      0,
-                      0,
-                      index == widget.happyCustomerData.length - 1 ? 0 : 10,
-                      0,
-                    ),
-                    child: widget.happyCustomerData[index].videoUrl != null
-                        ? FlickVideoPlayer(
-                            flickManager: flickManagers[index],
-                            flickVideoWithControls:
-                                const FlickVideoWithControls(
-                              videoFit: BoxFit.fill,
-                              playerLoadingFallback: Center(),
-                            ),
-                          )
-                        : Image.network(
-                            widget.happyCustomerData[index].thumbnailUrl!,
-                            fit: BoxFit.fill,
-                          ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: widget.desktopView ? 288 : 180,
+                  height: widget.desktopView ? 550 : 300,
+                  margin: EdgeInsets.fromLTRB(
+                    0,
+                    0,
+                    index == widget.happyCustomerData.length - 1 ? 0 : 10,
+                    0,
                   ),
-                  widget.happyCustomerData[index].videoUrl == null
-                      ? Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.only(right: 10, top: 10),
-                          width: 100,
-                          height: 30,
-                          padding: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5, bottom: 5),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Colors.white.withOpacity(0.8),
-                              border: Border.all(
-                                  width: 1, color: AppColors.cGreenColor)),
-                          child: Text(
-                            textAlign: TextAlign.center,
-                            'View image',
-                            style: GoogleFonts.outfit(
-                                color: AppColors.cGreenColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold),
+                  child: widget.happyCustomerData[index].videoUrl != null
+                      ? FlickVideoPlayer(
+                          flickManager: flickManagers[index],
+                          flickVideoWithControls: const FlickVideoWithControls(
+                            videoFit: BoxFit.fill,
+                            playerLoadingFallback: Center(),
                           ),
                         )
-                      : Container(
-                          width: widget.desktopView ? 60 : 35,
-                          height: widget.desktopView ? 60 : 35,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border:
-                                  Border.all(width: 2, color: Colors.black)),
-                          child: Icon(
-                            Icons.play_arrow,
-                            color: Colors.black,
-                            size: widget.desktopView ? 50 : 25,
-                          ),
+                      : Image.network(
+                          widget.happyCustomerData[index].thumbnailUrl!,
+                          fit: BoxFit.fill,
                         ),
-                ],
-              ),
-          
+                ),
+                widget.happyCustomerData[index].videoUrl == null
+                    ? Container(
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.only(right: 10, top: 10),
+                        width: 100,
+                        height: 30,
+                        padding: const EdgeInsets.only(
+                            left: 10, right: 10, top: 5, bottom: 5),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white.withOpacity(0.8),
+                            border: Border.all(
+                                width: 1, color: AppColors.cGreenColor)),
+                        child: Text(
+                          textAlign: TextAlign.center,
+                          'View image',
+                          style: GoogleFonts.outfit(
+                              color: AppColors.cGreenColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    : Container(
+                        width: widget.desktopView ? 60 : 35,
+                        height: widget.desktopView ? 60 : 35,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(width: 2, color: Colors.black)),
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: Colors.black,
+                          size: widget.desktopView ? 50 : 25,
+                        ),
+                      ),
+              ],
+            ),
           );
         },
       ),
