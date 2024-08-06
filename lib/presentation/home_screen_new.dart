@@ -134,6 +134,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
             return FlickManager(
               videoPlayerController: videoController
                 ..initialize().then((_) {
+                  videoController.pause();
                   // Play and then pause the video after a delay
                   // for (int i = 0; i < flickManagers.length; i++) {
                   //   _playAndPauseVideo(i);
@@ -1542,6 +1543,7 @@ class _HappyCustomerVideoAndGridWidgetState
       final flickManager = FlickManager(
           videoPlayerController: videoController
             ..initialize().then((_) {
+              videoController.pause();
               // for (int i = 0; i < flickManagers.length; i++) {
               //   _playAndPauseVideo(i);
               // }
