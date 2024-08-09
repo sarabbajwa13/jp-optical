@@ -268,13 +268,17 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => HomeScreenNew()),
-      (route) => false, // Remove all routes
+      (route) => false,
     );
   }
 
   void handleClick(Map<String, dynamic> data) {
     String action = data['action'];
     switch (action) {
+      case 'Home':
+        showNavigationDrawer = false;
+        _navigateToHomeScreen();
+        break;
       case 'cart':
         if (!dismissCartScreen) {
           showAnimatedDialog(context, data, 'Add to cart');

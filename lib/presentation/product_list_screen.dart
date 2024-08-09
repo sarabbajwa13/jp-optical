@@ -106,6 +106,10 @@ class _ProductlistscreenState extends State<Productlistscreen> {
   void handleNavigationDrawerClick(String action) {
     setState(() {
       switch (action) {
+        case 'Home':
+          showNavigationDrawer = false;
+          _navigateToHomeScreen();
+          break;
         case 'Close':
           showNavigationDrawer = false;
           break;

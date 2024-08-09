@@ -13,6 +13,12 @@ class MyNavigationdrawer extends StatefulWidget {
 class _NavigationdrawerState extends State<MyNavigationdrawer> {
   final List<Map<String, dynamic>> _navigationItems = [
     {
+      'title': "Home",
+      'callback': 'Home',
+      'fontWeight': FontWeight.bold,
+      'color': Colors.black
+    },
+    {
       'title': "Men's Opticals",
       'callback': 'Men Optical',
       'fontWeight': FontWeight.w400,
@@ -81,14 +87,14 @@ class _NavigationdrawerState extends State<MyNavigationdrawer> {
   ];
 
   @override
-Widget build(BuildContext context) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-           InkWell(
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            InkWell(
               onTap: () => widget.onClickCallBack('Close'),
               child: const Icon(
                 Icons.close,
@@ -96,44 +102,43 @@ Widget build(BuildContext context) {
                 size: 30,
               ),
             ),
-         
-        ],
-      ),
-      const SizedBox(height: 20),
-      Expanded(
-        child: ListView.builder(
-          itemCount: _navigationItems.length,
-          itemBuilder: (context, index) {
-            final item = _navigationItems[index];
-            return InkWell(
-              onTap: () => widget.onClickCallBack(item['callback']),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    child: Center(
-                      child: Text(
-                        item['title'],
-                        style: GoogleFonts.outfit(
-                          fontWeight: item['fontWeight'],
-                          fontSize: 18,
-                          color: item['color'],
+          ],
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _navigationItems.length,
+            itemBuilder: (context, index) {
+              final item = _navigationItems[index];
+              return InkWell(
+                onTap: () => widget.onClickCallBack(item['callback']),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      child: Center(
+                        child: Text(
+                          item['title'],
+                          style: GoogleFonts.outfit(
+                            fontWeight: item['fontWeight'],
+                            fontSize: 18,
+                            color: item['color'],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    height: 0.5,
-                    color: Colors.grey.withOpacity(0.5),
-                  ),
-                ],
-              ),
-            );
-          },
+                    Container(
+                      width: double.infinity,
+                      height: 0.5,
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 }

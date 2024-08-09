@@ -254,6 +254,10 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   void handleNavigationDrawerClick(String action) {
     setState(() {
       switch (action) {
+        case 'Home':
+          showNavigationDrawer = false;
+          Navigator.of(context);
+          break;
         case 'Close':
           showNavigationDrawer = false;
           break;
