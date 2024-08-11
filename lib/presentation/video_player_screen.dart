@@ -1,6 +1,7 @@
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:jp_optical/colors/app_color.dart';
+import 'package:jp_optical/presentation/home_screen_new.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -56,10 +57,20 @@ void initState() {
     flickManager.dispose();
     super.dispose();
   }
-
+_navigateToHomeScreen() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreenNew()),
+      (route) => false, // Remove all routes
+    );
+  }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          _navigateToHomeScreen();
+          return false;
+        },child:Scaffold(
       body: Center(
         child: flickManager.flickVideoManager?.videoPlayerController!.value.isInitialized ?? false
              ? AspectRatio(
@@ -68,6 +79,6 @@ void initState() {
               )
             : const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.cGreenColor)),
       ),
-    );
+    ));
   }
 }

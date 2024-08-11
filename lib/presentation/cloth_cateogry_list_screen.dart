@@ -560,6 +560,7 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
                 : Padding(
                     padding: const EdgeInsets.all(10),
                     child: MyNavigationdrawer(
+                        selectedTab: 'Men cloths',
                         onClickCallBack: handleNavigationDrawerClick))));
   }
 }

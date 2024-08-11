@@ -3,91 +3,93 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jp_optical/colors/app_color.dart';
 
 class MyNavigationdrawer extends StatefulWidget {
+  final String selectedTab;
   final ValueChanged<String> onClickCallBack;
-  const MyNavigationdrawer({super.key, required this.onClickCallBack});
+  const MyNavigationdrawer({super.key, required this.onClickCallBack, required this.selectedTab});
 
   @override
   State<MyNavigationdrawer> createState() => _NavigationdrawerState();
 }
 
 class _NavigationdrawerState extends State<MyNavigationdrawer> {
-  final List<Map<String, dynamic>> _navigationItems = [
+ 
+
+  @override
+  Widget build(BuildContext context) {
+     final List<Map<String, dynamic>> _navigationItems = [
     {
       'title': "Home",
       'callback': 'Home',
-      'fontWeight': FontWeight.bold,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Home" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Home" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Men's Opticals",
       'callback': 'Men Optical',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Men Optical" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Men Optical" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Women's Opticals",
       'callback': 'Women Optical',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Women Optical" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Women Optical" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Men's cloths",
       'callback': 'Men cloths',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Men cloths" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Men cloths" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Bags - women, men",
       'callback': 'Bags - women, men',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Bag" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Bag" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Perfumes",
       'callback': 'Perfumes',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Perfumes" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Perfumes" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Watches - women, men",
       'callback': 'Watches - women, men',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Watch" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Watch" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Belts",
       'callback': 'Belt',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Belt" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Belt" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Shoes",
       'callback': 'Shoe',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Shoe" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Shoe" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Caps",
       'callback': 'Caps',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Caps" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Caps" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Wallets",
       'callback': 'Wallets',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Wallets" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Wallets" ? AppColors.cGreenColor :  Colors.black
     },
     {
       'title': "Other Accessories",
       'callback': 'Other Accessories',
-      'fontWeight': FontWeight.w400,
-      'color': Colors.black
+      'fontWeight': widget.selectedTab == "Other Accessories" ? FontWeight.bold : null,
+      'color': widget.selectedTab == "Other Accessories" ? AppColors.cGreenColor :  Colors.black
     },
   ];
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

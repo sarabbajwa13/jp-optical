@@ -6,9 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:jp_optical/Widgets/MenWomenSectiondivider_label_widget.dart';
+import 'package:jp_optical/Widgets/categories_widget.dart';
 import 'package:jp_optical/Widgets/custom_dialog.dart';
 import 'package:jp_optical/Widgets/image_carousel_slider.dart';
 import 'package:jp_optical/Widgets/productItem_widget.dart';
@@ -19,6 +21,7 @@ import 'package:jp_optical/Widgets/banner_widget.dart';
 import 'package:jp_optical/Widgets/header.dart';
 import 'package:jp_optical/constants/endpoints.dart';
 import 'package:jp_optical/models/banner_carousel_model.dart';
+import 'package:jp_optical/models/item_model.dart';
 import 'package:jp_optical/models/product_item_firebase_model.dart';
 import 'package:jp_optical/models/happy_customer_firebase_model.dart';
 import 'package:jp_optical/presentation/cart_screen.dart';
@@ -56,10 +59,71 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   bool _isLoading = false, isFirstTime = true;
   bool _hasMore = true;
   late List<FlickManager> flickManagers;
+  late Future<List<Item>> _items;
+  final String categoryList = '''
+  [
+     {
+      "title": "Men's Opticals",
+      "callback": "Men Optical",
+      "imageUrl": "assets/icons/men_optical_icon.png"
+    },
+    {
+      "title": "Women's Opticals",
+      "callback": "Women Optical",
+      "imageUrl": "assets/icons/women_optical_icon.png"
+    },
+    {
+      "title": "Men's cloths",
+      "callback": "Men cloths",
+      "imageUrl": "assets/icons/cloth_icon.png"
+    },
+    {
+      "title": "Bags - women, men",
+      "callback": "Bags - women, men",
+      "imageUrl": "assets/icons/bag_icon.png"    
+    },
+    {
+      "title": "Perfumes",
+      "callback": "Perfumes",
+      "imageUrl": "assets/icons/perfume_icon.png"
+     },
+    {
+      "title": "Watches - women, men",
+      "callback": "Watches - women, men",
+      "imageUrl": "assets/icons/watch_icon.png" 
+    },
+    {
+      "title": "Belts",
+      "callback": "Belt",
+      "imageUrl": "assets/icons/belt_icon.png"    
+    },
+    {
+      "title": "Shoes",
+      "callback": "Shoe",
+      "imageUrl": "assets/icons/shoe_icon.png"  
+    },
+    {
+      "title": "Caps",
+      "callback": "Caps",
+      "imageUrl": "assets/icons/cap_icon.png"   
+    },
+    {
+      "title": "Wallets",
+      "callback": "Wallets",
+      "imageUrl": "assets/icons/wallet_icon.png"  
+    },
+    {
+      "title": "Other Accessories",
+      "callback": "Other Accessories",
+      "imageUrl": "assets/icons/other_accessories_icon.png"    
+    }
+  ]
+  ''';
   @override
   void initState() {
     super.initState();
-
+    _items = loadItems();
+    loadItems();
     _startAutoScroll();
     _readyToOrderScrollController.addListener(() {
       if (!_isLoading &&
@@ -104,6 +168,12 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     _fetchProducts(Endpoints.readyToOrderList);
   }
 
+  Future<List<Item>> loadItems() async {
+    // Parse the static JSON string
+    List<dynamic> jsonList = json.decode(categoryList);
+    return jsonList.map((json) => Item.fromJson(json)).toList();
+  }
+
   Future<void> _fetchProducts(String collectionName) async {
     if (_isLoading || !_hasMore) return;
 
@@ -134,11 +204,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
             return FlickManager(
               videoPlayerController: videoController
                 ..initialize().then((_) {
-                  videoController.pause();
-                  // Play and then pause the video after a delay
-                  // for (int i = 0; i < flickManagers.length; i++) {
-                  //   _playAndPauseVideo(i);
-                  // }
+                  for (int i = 0; i < flickManagers.length; i++) {
+                    _playAndPauseVideo(i);
+                  }
                 }),
             );
           }).toList();
@@ -156,12 +224,17 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   }
 
   void _playAndPauseVideo(int index) {
-    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+    final flickManager = flickManagers[index];
+    final videoController =
+        flickManager.flickVideoManager?.videoPlayerController;
 
-    // Delay and then pause the video
-    Future.delayed(Duration(milliseconds: 100), () {
-      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
-    });
+    if (videoController != null && videoController.value.isInitialized) {
+      videoController.setVolume(0.0);
+      videoController.play(); // Start playback briefly
+      Future.delayed(Duration(milliseconds: 100), () {
+        videoController.pause(); // Pause after a short delay
+      });
+    }
   }
 
   String bannerImageUrl = '', bannerImageUrl2 = '';
@@ -718,12 +791,61 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
                                 SizedBox(height: desktopView ? 40 : 20),
                                 CategoryLabel(
                                   tabletView: tabletView,
-                                  label: 'Opticals',
+                                  label: 'Category',
                                 ),
-                                MenWomenContainerBelowCategory(
-                                  tabletView: tabletView,
-                                  desktopView: desktopView,
-                                  onClickCallBack: _handleClickOnOpticalSection,
+                                // MenWomenContainerBelowCategory(
+                                //   tabletView: tabletView,
+                                //   desktopView: desktopView,
+                                //   onClickCallBack: _handleClickOnOpticalSection,
+                                // ),
+                                FutureBuilder<List<Item>>(
+                                  future: _items,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Center(
+                                          child: CircularProgressIndicator());
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                          child:
+                                              Text('Error: ${snapshot.error}'));
+                                    } else if (!snapshot.hasData ||
+                                        snapshot.data!.isEmpty) {
+                                      return Center(
+                                          child: Text('No items found'));
+                                    } else {
+                                      // Use the resolved list here
+                                      List<Item> items = snapshot.data!;
+                                      return Container(
+                                        margin: EdgeInsets.only(
+                                          left: tabletView ? 50 : 10,
+                                          right: tabletView ? 50 : 10,
+                                        ),
+                                        child: ResponsiveGridList(
+                                          horizontalGridSpacing: 5,
+                                          verticalGridSpacing: 5,
+                                          horizontalGridMargin: 5,
+                                          verticalGridMargin: 5,
+                                          minItemWidth: 100,
+                                          minItemsPerRow: 3,
+                                          maxItemsPerRow: 11,
+                                          listViewBuilderOptions:
+                                              ListViewBuilderOptions(
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            shrinkWrap: true,
+                                          ),
+                                          children: List.generate(
+                                            items.length,
+                                            (index) => CategoriesWidget(
+                                                categoryList: items[index],
+                                                onClickCallBack:
+                                                    handleNavigationDrawerClick),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 ),
 
                                 CategoryLabel(
@@ -1082,6 +1204,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
             : Padding(
                 padding: const EdgeInsets.all(10),
                 child: MyNavigationdrawer(
+                    selectedTab: 'Home',
                     onClickCallBack: handleNavigationDrawerClick)));
   }
 }
@@ -2088,10 +2211,9 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
       final flickManager = FlickManager(
           videoPlayerController: videoController
             ..initialize().then((_) {
-              // for (int i = 0; i < flickManagers.length; i++) {
-              //   _playAndPauseVideo(i);
-              // }
-              videoController.addListener(_onVideoPlayerChanged);
+              for (int i = 0; i < flickManagers.length; i++) {
+                _playAndPauseVideo(i);
+              }
             }));
 
       return flickManager;
@@ -2099,20 +2221,16 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
   }
 
   void _playAndPauseVideo(int index) {
-    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+    final flickManager = flickManagers[index];
+    final videoController =
+        flickManager.flickVideoManager?.videoPlayerController;
 
-    // Delay and then pause the video
-    Future.delayed(Duration(milliseconds: 100), () {
-      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
-    });
-  }
-
-  void _onVideoPlayerChanged() {
-    final controller = flickManager.flickVideoManager?.videoPlayerController;
-    if (controller != null) {
-      if (controller.value.hasError) {
-        debugPrint("Video player error: ${controller.value.errorDescription}");
-      }
+    if (videoController != null && videoController.value.isInitialized) {
+      videoController.setVolume(0.0);
+      videoController.play(); // Start playback briefly
+      Future.delayed(Duration(milliseconds: 100), () {
+        videoController.pause(); // Pause after a short delay
+      });
     }
   }
 

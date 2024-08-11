@@ -548,6 +548,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
                 : Padding(
                     padding: const EdgeInsets.all(10),
                     child: MyNavigationdrawer(
+                        selectedTab: widget.routeFrom,
                         onClickCallBack: handleNavigationDrawerClick))));
   }
 }
