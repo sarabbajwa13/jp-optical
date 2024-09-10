@@ -33,6 +33,7 @@ import 'package:outlined_text/outlined_text.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HomeScreenNew extends StatefulWidget {
   const HomeScreenNew({super.key});
@@ -58,8 +59,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   DocumentSnapshot? _lastDoc;
   bool _isLoading = false, isFirstTime = true;
   bool _hasMore = true;
-  late List<FlickManager> flickManagers;
+  // late List<FlickManager> flickManagers;
   late Future<List<Item>> _items;
+  List<ProductItemFirebaseModel> _products = [];
   final String categoryList = '''
   [
      {
@@ -119,9 +121,11 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     }
   ]
   ''';
+
   @override
   void initState() {
     super.initState();
+
     _items = loadItems();
     loadItems();
     _startAutoScroll();
@@ -166,6 +170,77 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
         ApiService().fetchBannerBelowBestSellerFromFirebase();
     fetchBannerData();
     _fetchProducts(Endpoints.readyToOrderList);
+    _fetchMenProducts();
+    // copyCollectionData(Endpoints.bestSellersList, Endpoints.menOpticalProductList);
+  }
+
+  Future<List<ProductItemFirebaseModel>> fetchProducts() async {
+    try {
+      // Call _fetchMenProducts to update _products list
+      await _fetchMenProducts();
+
+      // Return the updated list of products
+      return _products;
+    } catch (e) {
+      // Handle any exceptions
+      print('Error fetching products: $e');
+      return [];
+    }
+  }
+
+  Future<void> _fetchMenProducts() async {
+    try {
+      print('Sarab --->');
+      Map<String, dynamic> result = await ApiService()
+          .fetchMenOpticalProductListFromFirebase1(
+              lastDoc: _lastDoc, limit: 10);
+
+      // Debug: Print result to inspect the data structure
+      print('Sarab Result from API: $result');
+
+      List<ProductItemFirebaseModel> newProducts =
+          List<ProductItemFirebaseModel>.from(result['products']
+              .map((item) => ProductItemFirebaseModel.fromMap(item)));
+      DocumentSnapshot? lastDocument = result['lastDoc'];
+
+      // Debug: Print newProducts and lastDocument
+      print('Sarab New Products: $newProducts');
+      print('Sarab Last Document: $lastDocument');
+
+      setState(() {
+        _products.addAll(newProducts);
+        _lastDoc = lastDocument;
+      });
+    } catch (e) {
+      // Handle errors
+      print('Sarab Error fetching products: $e');
+    }
+  }
+
+  Future<void> copyCollectionData(
+      String sourceCollectionPath, String destinationCollectionPath) async {
+    final firestore = FirebaseFirestore.instance;
+
+    try {
+      // Get the source collection
+      final sourceCollection = firestore.collection(sourceCollectionPath);
+      final snapshot = await sourceCollection.get();
+
+      // Iterate over documents in the source collection
+      for (var doc in snapshot.docs) {
+        final data = doc.data(); // Get the document data
+
+        // Add the data to the destination collection
+        await firestore
+            .collection(destinationCollectionPath)
+            .doc(doc.id)
+            .set(data);
+      }
+
+      print("Data copied successfully!");
+    } catch (e) {
+      print("Error copying data: $e");
+    }
   }
 
   Future<List<Item>> loadItems() async {
@@ -198,18 +273,20 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
           _hasMore = newProducts.length == 10;
           isFirstTime = false;
 
-          flickManagers = _readyToOrderFirebaseList.map((data) {
-            final videoController =
-                VideoPlayerController.network(data.videoUrl ?? '');
-            return FlickManager(
-              videoPlayerController: videoController
-                ..initialize().then((_) {
-                  for (int i = 0; i < flickManagers.length; i++) {
-                    _playAndPauseVideo(i);
-                  }
-                }),
-            );
-          }).toList();
+          // flickManagers = _readyToOrderFirebaseList.map((data) {
+          //   final videoController =
+          //       VideoPlayerController.network(data.videoUrl ?? '');
+          //   return FlickManager(
+          //     videoPlayerController: videoController
+          //       ..initialize().then((_) {
+          //         setState(() {});
+          //     videoController.pause();
+          //         // for (int i = 0; i < flickManagers.length; i++) {
+          //         //   _playAndPauseVideo(i);
+          //         // }
+          //       }),
+          //   );
+          // }).toList();
         });
       } else {
         setState(() {
@@ -223,19 +300,19 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     }
   }
 
-  void _playAndPauseVideo(int index) {
-    final flickManager = flickManagers[index];
-    final videoController =
-        flickManager.flickVideoManager?.videoPlayerController;
+  // void _playAndPauseVideo(int index) {
+  //   final flickManager = flickManagers[index];
+  //   final videoController =
+  //       flickManager.flickVideoManager?.videoPlayerController;
 
-    if (videoController != null && videoController.value.isInitialized) {
-      videoController.setVolume(0.0);
-      videoController.play(); // Start playback briefly
-      Future.delayed(Duration(milliseconds: 100), () {
-        videoController.pause(); // Pause after a short delay
-      });
-    }
-  }
+  //   if (videoController != null && videoController.value.isInitialized) {
+  //     videoController.setVolume(0.0);
+  //     videoController.play(); // Start playback briefly
+  //     Future.delayed(Duration(milliseconds: 100), () {
+  //       videoController.pause(); // Pause after a short delay
+  //     });
+  //   }
+  // }
 
   String bannerImageUrl = '', bannerImageUrl2 = '';
   void fetchBannerData() {
@@ -276,7 +353,7 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
               curve: Curves.easeInOut,
             );
           } else {
-            _scrollController.jumpTo(0); // Scroll back to start
+            // _scrollController.jumpTo(0); // Scroll back to start
           }
         }
       }
@@ -293,9 +370,9 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     _scrollController.dispose();
     _autoScrollTimer?.cancel();
     _readyToOrderScrollController.dispose();
-    for (var flickManager in flickManagers) {
-      flickManager.dispose();
-    }
+    // for (var flickManager in flickManagers) {
+    //   flickManager.dispose();
+    // }
     super.dispose();
   }
 
@@ -549,6 +626,38 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     );
   }
 
+  void _scrollLeft() {
+    _readyToOrderScrollController.animateTo(
+      _readyToOrderScrollController.offset - 1000,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollRight() {
+    _readyToOrderScrollController.animateTo(
+      _readyToOrderScrollController.offset + 1000,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollLeftBestSeller() {
+    _scrollController.animateTo(
+      _scrollController.offset - 1000,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollRightBestSeller() {
+    _scrollController.animateTo(
+      _scrollController.offset + 1000,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -556,656 +665,926 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
     var tabletView = screenSize.width > 600;
     var mediumTabletView = screenSize.width > 820;
     var desktopView = screenSize.width > 1300;
-    return Scaffold(
-        body: !showNavigationDrawer
-            ? Stack(alignment: Alignment.topRight, children: [
-                Positioned.fill(
-                  child: Image.asset(
-                    'assets/images/app_bg.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Header(
-                      onClickHamburger: handleOnClickHamburger,
-                      showCart: mobileView ? false : true,
-                      showBackArrow: false,
-                      routeFromHome: true),
-                  Expanded(
-                      child: SingleChildScrollView(
-                          physics: dismissCartScreen
-                              ? NeverScrollableScrollPhysics()
-                              : null,
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // TopBannerBelowHeader(
-                                //     tabletView: tabletView,
-                                //     desktopView: desktopView,
-                                //     mediumTabletView: mediumTabletView,
-                                //     handleGetDetailsClick: handleClick),
-                                FutureBuilder<List<BannerCarouselModel>>(
-                                  future: bannerCarouselFirebaseList,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Shimmer.fromColors(
-                                          baseColor: Colors.grey[300]!,
-                                          highlightColor: Colors.grey[100]!,
-                                          child: Container(
-                                            height: desktopView
-                                                ? 500
-                                                : tabletView
-                                                    ? 300
-                                                    : 200,
-                                            width: double.infinity,
-                                            color: Colors.grey[300]!,
-                                          ));
-                                    } else if (snapshot.hasError) {
-                                      return Center(
-                                          child:
-                                              Text('Error: ${snapshot.error}'));
-                                    } else if (!snapshot.hasData ||
-                                        snapshot.data!.isEmpty) {
-                                      return const Center(
-                                          child: Text('No data available'));
-                                    } else {
-                                      List<String> imageUrls = snapshot.data!
-                                          .map((model) => model.banner)
-                                          .toList();
-                                      return Container(
-                                        child: ImageCarouselSlider(
-                                          items: imageUrls,
-                                          imageHeight: desktopView ? 500 : 200,
-                                          dotColor: Colors.black,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-
-                                MarqueeWidgetbelowTopBanner(
-                                    tabletView: tabletView),
-                                const SizedBox(height: 20),
-                                ReadyToOrderDividerAndLabel(
-                                    tabletView: tabletView),
-                                SizedBox(height: tabletView ? 50 : 20),
-
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    right: tabletView ? 60 : 10,
-                                    left: tabletView ? 60 : 10,
-                                  ),
-                                  width: double.infinity,
-                                  child: Container(
-                                    height: desktopView ? 550 : 300,
-                                    child: SingleChildScrollView(
-                                      controller: _readyToOrderScrollController,
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: _readyToOrderFirebaseList
-                                                .isNotEmpty
-                                            ? List.generate(
-                                                _readyToOrderFirebaseList
-                                                        .length +
-                                                    (_hasMore ? 1 : 0),
-                                                (index) {
-                                                  if (index ==
-                                                      _readyToOrderFirebaseList
-                                                          .length) {
-                                                    return isFirstTime
-                                                        ? Shimmer.fromColors(
-                                                            baseColor: Colors
-                                                                .grey[300]!,
-                                                            highlightColor:
-                                                                Colors
-                                                                    .grey[100]!,
-                                                            child: Container(
-                                                              width: desktopView
-                                                                  ? 365
-                                                                  : tabletView
-                                                                      ? 165
-                                                                      : 365,
-                                                              height: desktopView
-                                                                  ? 620
-                                                                  : tabletView
-                                                                      ? 500
-                                                                      : 320,
-                                                              color: Colors
-                                                                  .grey[300]!,
-                                                            ),
-                                                          )
-                                                        : Container();
-                                                  }
+    return WillPopScope(
+        onWillPop: () async {
+          // _navigateToHomeScreen();
+          if (dismissCartScreen) {
+            setState(() {
+              dismissCartScreen = false;
+            });
+            return false;
+          } else {
+            SystemNavigator.pop();
+            return true;
+          }
+        },
+        child: SafeArea(
+            child: Scaffold(
+                body: !showNavigationDrawer
+                    ? Stack(alignment: Alignment.topRight, children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/images/app_bg.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Header(
+                                  onClickHamburger: handleOnClickHamburger,
+                                  showCart: mobileView ? false : true,
+                                  showBackArrow: false,
+                                  routeFromHome: true),
+                              Expanded(
+                                  child: SingleChildScrollView(
+                                      physics: dismissCartScreen
+                                          ? NeverScrollableScrollPhysics()
+                                          : null,
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // TopBannerBelowHeader(
+                                            //     tabletView: tabletView,
+                                            //     desktopView: desktopView,
+                                            //     mediumTabletView: mediumTabletView,
+                                            //     handleGetDetailsClick: handleClick),
+                                            FutureBuilder<
+                                                List<BannerCarouselModel>>(
+                                              future:
+                                                  bannerCarouselFirebaseList,
+                                              builder: (context, snapshot) {
+                                                if (snapshot.connectionState ==
+                                                    ConnectionState.waiting) {
+                                                  return Shimmer.fromColors(
+                                                      baseColor:
+                                                          Colors.grey[300]!,
+                                                      highlightColor:
+                                                          Colors.grey[100]!,
+                                                      child: Container(
+                                                        height: desktopView
+                                                            ? 500
+                                                            : tabletView
+                                                                ? 300
+                                                                : 200,
+                                                        width: double.infinity,
+                                                        color:
+                                                            Colors.grey[300]!,
+                                                      ));
+                                                } else if (snapshot.hasError) {
+                                                  return Center(
+                                                      child: Text(
+                                                          'Error: ${snapshot.error}'));
+                                                } else if (!snapshot.hasData ||
+                                                    snapshot.data!.isEmpty) {
+                                                  return const Center(
+                                                      child: Text(
+                                                          'No data available'));
+                                                } else {
+                                                  List<String> imageUrls =
+                                                      snapshot.data!
+                                                          .map((model) =>
+                                                              model.banner)
+                                                          .toList();
                                                   return Container(
-                                                    width:
-                                                        desktopView ? 288 : 180,
-                                                    height: double.infinity,
-                                                    child: InkWell(
-                                                      onTap: () => {
-                                                        navigateToVideoPlayerScreen({
-                                                          'videoUrl':
-                                                              _readyToOrderFirebaseList[
-                                                                      index]
-                                                                  .videoUrl!,
-                                                          'thumbnailUrl':
-                                                              _readyToOrderFirebaseList[
-                                                                      index]
-                                                                  .thumbnailUrl,
-                                                        })
-                                                      },
-                                                      child: Stack(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        children: [
-                                                          Container(
-                                                            height:
-                                                                double.infinity,
-                                                            margin: EdgeInsets
-                                                                .fromLTRB(
-                                                              0,
-                                                              0,
-                                                              index ==
+                                                    child: ImageCarouselSlider(
+                                                      items: imageUrls,
+                                                      imageHeight: desktopView
+                                                          ? 500
+                                                          : 200,
+                                                      dotColor: Colors.black,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                            ),
+
+                                            MarqueeWidgetbelowTopBanner(
+                                                tabletView: tabletView),
+                                            const SizedBox(height: 20),
+
+                                            ReadyToOrderDividerAndLabel(
+                                                tabletView: tabletView),
+                                            SizedBox(
+                                                height: tabletView ? 50 : 20),
+                                            Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  Container(
+                                                    margin: EdgeInsets.only(
+                                                      right:
+                                                          tabletView ? 60 : 10,
+                                                      left:
+                                                          tabletView ? 60 : 10,
+                                                    ),
+                                                    width: double.infinity,
+                                                    child: Container(
+                                                      height: desktopView
+                                                          ? 550
+                                                          : 300,
+                                                      child:
+                                                          SingleChildScrollView(
+                                                        controller:
+                                                            _readyToOrderScrollController,
+                                                        scrollDirection:
+                                                            Axis.horizontal,
+                                                        child: Row(
+                                                          children:
+                                                              _readyToOrderFirebaseList
+                                                                      .isNotEmpty
+                                                                  ? List
+                                                                      .generate(
                                                                       _readyToOrderFirebaseList
-                                                                              .length -
-                                                                          1
-                                                                  ? 0
-                                                                  : 10,
-                                                              0,
-                                                            ),
-                                                            child:
-                                                                FlickVideoPlayer(
-                                                              flickManager:
-                                                                  flickManagers[
-                                                                      index],
-                                                              flickVideoWithControls:
-                                                                  const FlickVideoWithControls(
-                                                                videoFit:
-                                                                    BoxFit.fill,
-                                                                playerLoadingFallback:
-                                                                    Center(),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            width: desktopView
-                                                                ? 60
-                                                                : 35,
-                                                            height: desktopView
-                                                                ? 60
-                                                                : 35,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          50),
-                                                              border: Border.all(
-                                                                  width: 2,
-                                                                  color: Colors
-                                                                      .black),
-                                                            ),
-                                                            child: Icon(
-                                                              Icons.play_arrow,
-                                                              color:
-                                                                  Colors.black,
-                                                              size: desktopView
-                                                                  ? 50
-                                                                  : 25,
-                                                            ),
-                                                          ),
-                                                        ],
+                                                                              .length +
+                                                                          (_hasMore
+                                                                              ? 1
+                                                                              : 0),
+                                                                      (index) {
+                                                                        if (index ==
+                                                                            _readyToOrderFirebaseList.length) {
+                                                                          return isFirstTime
+                                                                              ? Shimmer.fromColors(
+                                                                                  baseColor: Colors.grey[300]!,
+                                                                                  highlightColor: Colors.grey[100]!,
+                                                                                  child: Container(
+                                                                                    width: desktopView
+                                                                                        ? 365
+                                                                                        : tabletView
+                                                                                            ? 165
+                                                                                            : 365,
+                                                                                    height: desktopView
+                                                                                        ? 620
+                                                                                        : tabletView
+                                                                                            ? 500
+                                                                                            : 320,
+                                                                                    color: Colors.grey[300]!,
+                                                                                  ),
+                                                                                )
+                                                                              : Container(margin: EdgeInsets.only(right: desktopView ? 80 : 0, left: desktopView ? 20 : 0), child: Center(child: CircularProgressIndicator()));
+                                                                        }
+                                                                        return Container(
+                                                                          width: desktopView
+                                                                              ? 288
+                                                                              : 180,
+                                                                          height:
+                                                                              double.infinity,
+                                                                          child:
+                                                                              InkWell(
+                                                                            onTap: () =>
+                                                                                {
+                                                                              navigateToVideoPlayerScreen({
+                                                                                'videoUrl': _readyToOrderFirebaseList[index].videoUrl!,
+                                                                                'thumbnailUrl': _readyToOrderFirebaseList[index].thumbnailUrl,
+                                                                              })
+                                                                            },
+                                                                            child:
+                                                                                Stack(
+                                                                              alignment: Alignment.center,
+                                                                              children: [
+                                                                                Container(
+                                                                                  width: desktopView ? 288 : 180,
+                                                                                  height: double.infinity,
+                                                                                  margin: EdgeInsets.fromLTRB(
+                                                                                    0,
+                                                                                    0,
+                                                                                    index == _readyToOrderFirebaseList.length - 1 ? 0 : 10,
+                                                                                    0,
+                                                                                  ),
+                                                                                  child: _readyToOrderFirebaseList[index].thumbnailUrl != null
+                                                                                      ? Image.network(
+                                                                                          _readyToOrderFirebaseList[index].thumbnailUrl!,
+                                                                                          fit: BoxFit.fill,
+                                                                                        )
+                                                                                      : Container(
+                                                                                          color: Colors.black,
+                                                                                        ),
+                                                                                  //     FlickVideoPlayer(
+                                                                                  //   flickManager:
+                                                                                  //       flickManagers[
+                                                                                  //           index],
+                                                                                  //   flickVideoWithControls:
+                                                                                  //       const FlickVideoWithControls(
+                                                                                  //     videoFit:
+                                                                                  //         BoxFit.fill,
+                                                                                  //     playerLoadingFallback:
+                                                                                  //         Center(),
+                                                                                  //   ),
+                                                                                  // ),
+                                                                                ),
+                                                                                Container(
+                                                                                  width: desktopView ? 60 : 35,
+                                                                                  height: desktopView ? 60 : 35,
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Colors.white,
+                                                                                    borderRadius: BorderRadius.circular(50),
+                                                                                    border: Border.all(width: 2, color: Colors.black),
+                                                                                  ),
+                                                                                  child: Icon(
+                                                                                    Icons.play_arrow,
+                                                                                    color: Colors.black,
+                                                                                    size: desktopView ? 50 : 25,
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    )
+                                                                  : [
+                                                                      Center(
+                                                                          child:
+                                                                              Shimmer.fromColors(
+                                                                        baseColor:
+                                                                            Colors.grey[300]!,
+                                                                        highlightColor:
+                                                                            Colors.grey[100]!,
+                                                                        child:
+                                                                            Container(
+                                                                          width: desktopView
+                                                                              ? 365
+                                                                              : tabletView
+                                                                                  ? 165
+                                                                                  : 365,
+                                                                          height: desktopView
+                                                                              ? 620
+                                                                              : tabletView
+                                                                                  ? 500
+                                                                                  : 320,
+                                                                          color:
+                                                                              Colors.grey[300]!,
+                                                                        ),
+                                                                      ))
+                                                                    ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  desktopView
+                                                      ? Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            InkWell(
+                                                                onTap:
+                                                                    _scrollLeft,
+                                                                child:
+                                                                    Container(
+                                                                  alignment:
+                                                                      Alignment
+                                                                          .center,
+                                                                  margin:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          left:
+                                                                              15),
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          20),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              50),
+                                                                      color: AppColors
+                                                                          .cGreenColor,
+                                                                      border: Border.all(
+                                                                          width:
+                                                                              4,
+                                                                          color:
+                                                                              Colors.white)),
+                                                                  child:
+                                                                      const Icon(
+                                                                    Icons
+                                                                        .arrow_back_ios_new,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    size: 40,
+                                                                  ),
+                                                                )),
+                                                            InkWell(
+                                                                onTap:
+                                                                    _scrollRight,
+                                                                child:
+                                                                    Container(
+                                                                  alignment:
+                                                                      Alignment
+                                                                          .center,
+                                                                  margin:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          right:
+                                                                              15),
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          20),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              50),
+                                                                      color: AppColors
+                                                                          .cGreenColor,
+                                                                      border: Border.all(
+                                                                          width:
+                                                                              4,
+                                                                          color:
+                                                                              Colors.white)),
+                                                                  child:
+                                                                      const Icon(
+                                                                    Icons
+                                                                        .arrow_forward_ios,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    size: 40,
+                                                                  ),
+                                                                )),
+                                                          ],
+                                                        )
+                                                      : Container()
+                                                ]),
+
+                                            SizedBox(
+                                                height: desktopView ? 40 : 20),
+                                            CategoryLabel(
+                                              tabletView: tabletView,
+                                              label: 'Category',
+                                            ),
+                                            // MenWomenContainerBelowCategory(
+                                            //   tabletView: tabletView,
+                                            //   desktopView: desktopView,
+                                            //   onClickCallBack: _handleClickOnOpticalSection,
+                                            // ),
+                                            FutureBuilder<List<Item>>(
+                                              future: _items,
+                                              builder: (context, snapshot) {
+                                                if (snapshot.connectionState ==
+                                                    ConnectionState.waiting) {
+                                                  return Center(
+                                                      child:
+                                                          CircularProgressIndicator());
+                                                } else if (snapshot.hasError) {
+                                                  return Center(
+                                                      child: Text(
+                                                          'Error: ${snapshot.error}'));
+                                                } else if (!snapshot.hasData ||
+                                                    snapshot.data!.isEmpty) {
+                                                  return Center(
+                                                      child: Text(
+                                                          'No items found'));
+                                                } else {
+                                                  // Use the resolved list here
+                                                  List<Item> items =
+                                                      snapshot.data!;
+                                                  return Container(
+                                                    margin: EdgeInsets.only(
+                                                      left:
+                                                          tabletView ? 50 : 10,
+                                                      right:
+                                                          tabletView ? 50 : 10,
+                                                    ),
+                                                    child: ResponsiveGridList(
+                                                      horizontalGridSpacing: 5,
+                                                      verticalGridSpacing: 5,
+                                                      horizontalGridMargin: 5,
+                                                      verticalGridMargin: 5,
+                                                      minItemWidth: 100,
+                                                      minItemsPerRow: 3,
+                                                      maxItemsPerRow: 11,
+                                                      listViewBuilderOptions:
+                                                          ListViewBuilderOptions(
+                                                        physics:
+                                                            const NeverScrollableScrollPhysics(),
+                                                        shrinkWrap: true,
+                                                      ),
+                                                      children: List.generate(
+                                                        items.length,
+                                                        (index) => CategoriesWidget(
+                                                            categoryList:
+                                                                items[index],
+                                                            onClickCallBack:
+                                                                handleNavigationDrawerClick),
                                                       ),
                                                     ),
                                                   );
-                                                },
-                                              )
-                                            : [
-                                                Center(
-                                                    child: Shimmer.fromColors(
-                                                  baseColor: Colors.grey[300]!,
-                                                  highlightColor:
-                                                      Colors.grey[100]!,
-                                                  child: Container(
-                                                    width: desktopView
-                                                        ? 365
-                                                        : tabletView
-                                                            ? 165
-                                                            : 365,
-                                                    height: desktopView
-                                                        ? 620
-                                                        : tabletView
-                                                            ? 500
-                                                            : 320,
-                                                    color: Colors.grey[300]!,
-                                                  ),
-                                                ))
-                                              ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                                }
+                                              },
+                                            ),
 
-                                SizedBox(height: desktopView ? 40 : 20),
-                                CategoryLabel(
-                                  tabletView: tabletView,
-                                  label: 'Category',
-                                ),
-                                // MenWomenContainerBelowCategory(
-                                //   tabletView: tabletView,
-                                //   desktopView: desktopView,
-                                //   onClickCallBack: _handleClickOnOpticalSection,
-                                // ),
-                                FutureBuilder<List<Item>>(
-                                  future: _items,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Center(
-                                          child: CircularProgressIndicator());
-                                    } else if (snapshot.hasError) {
-                                      return Center(
-                                          child:
-                                              Text('Error: ${snapshot.error}'));
-                                    } else if (!snapshot.hasData ||
-                                        snapshot.data!.isEmpty) {
-                                      return Center(
-                                          child: Text('No items found'));
-                                    } else {
-                                      // Use the resolved list here
-                                      List<Item> items = snapshot.data!;
-                                      return Container(
-                                        margin: EdgeInsets.only(
-                                          left: tabletView ? 50 : 10,
-                                          right: tabletView ? 50 : 10,
-                                        ),
-                                        child: ResponsiveGridList(
-                                          horizontalGridSpacing: 5,
-                                          verticalGridSpacing: 5,
-                                          horizontalGridMargin: 5,
-                                          verticalGridMargin: 5,
-                                          minItemWidth: 100,
-                                          minItemsPerRow: 3,
-                                          maxItemsPerRow: 11,
-                                          listViewBuilderOptions:
-                                              ListViewBuilderOptions(
-                                            physics:
-                                                const NeverScrollableScrollPhysics(),
-                                            shrinkWrap: true,
-                                          ),
-                                          children: List.generate(
-                                            items.length,
-                                            (index) => CategoriesWidget(
-                                                categoryList: items[index],
-                                                onClickCallBack:
-                                                    handleNavigationDrawerClick),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
+                                            CategoryLabel(
+                                              tabletView: tabletView,
+                                              label:
+                                                  'Also Try out our Clothing and Accessory',
+                                            ),
 
-                                CategoryLabel(
-                                  tabletView: tabletView,
-                                  label:
-                                      'Also Try out our Clothing and Accessory',
-                                ),
-
-                                MenClothBanner(
-                                  tabletView: tabletView,
-                                  desktopView: desktopView,
-                                  onClickCallBack: _handleClickOnClothSection,
-                                ),
-                                const SizedBox(height: 20),
-                                BestSellersLabel(tabletView: tabletView),
-                                SizedBox(height: tabletView ? 50 : 20),
-                                NotificationListener<ScrollNotification>(
-                                    onNotification:
-                                        (ScrollNotification scrollInfo) {
-                                      if (scrollInfo
-                                          is ScrollStartNotification) {
-                                        _isUserScrolling = true;
-                                        _stopAutoScroll();
-                                      } else if (scrollInfo
-                                          is ScrollEndNotification) {
-                                        Future.delayed(
-                                            const Duration(seconds: 3), () {
-                                          if (_isUserScrolling) {
-                                            _isUserScrolling = false;
-                                            _startAutoScroll();
-                                          }
-                                        });
-                                      }
-                                      return true;
-                                    },
-                                    child: Container(
-                                      height: desktopView ? 640 : 470,
-                                      margin: EdgeInsets.only(
-                                          left: tabletView ? 50 : 10,
-                                          right: tabletView ? 50 : 10),
-                                      child: FutureBuilder<
-                                              List<ProductItemFirebaseModel>>(
-                                          future: bestSellerFirebaseList,
-                                          builder: (context, snapshot) {
-                                            if (snapshot.connectionState ==
-                                                ConnectionState.waiting) {
-                                              return ListView(
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  children: List.generate(
-                                                      7,
-                                                      (index) =>
-                                                          Shimmer.fromColors(
-                                                              baseColor: Colors
-                                                                  .grey[300]!,
-                                                              highlightColor:
-                                                                  Colors.grey[
-                                                                      100]!,
-                                                              child: Container(
-                                                                width: desktopView
-                                                                    ? 365
-                                                                    : tabletView
-                                                                        ? 165
-                                                                        : 365,
-                                                                height: desktopView
-                                                                    ? 620
-                                                                    : tabletView
-                                                                        ? 500
-                                                                        : 620,
-                                                                color: Colors
-                                                                    .grey[300]!,
-                                                              ))));
-                                            } else if (snapshot.hasError) {
-                                              return Center();
-                                            } else if (!snapshot.hasData ||
-                                                snapshot.data!.isEmpty) {
-                                              return Center();
-                                            } else {
-                                              return ListView.builder(
-                                                controller: _scrollController,
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemCount:
-                                                    snapshot.data!.length >= 16
-                                                        ? 16
-                                                        : snapshot.data!.length,
-                                                itemBuilder: (context, index) {
-                                                  // Check if the current index is 50
-                                                  if (index == 15) {
-                                                    return Center(
-                                                        child: InkWell(
-                                                      onTap: () => {
-                                                        handleNavigation(
-                                                            Endpoints
-                                                                .bestSellersList,
-                                                            'Best Seller')
-                                                      },
-                                                      child: Container(
-                                                        height: desktopView
-                                                            ? 100
-                                                            : 50,
-                                                        width: desktopView
-                                                            ? 150
-                                                            : 100,
-                                                        alignment:
-                                                            Alignment.center,
-                                                        decoration: BoxDecoration(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8),
-                                                            color: Colors.white,
-                                                            border: Border.all(
-                                                                width: 1,
-                                                                color: Colors
-                                                                    .grey)),
-                                                        child: Text(
-                                                          'View more >',
-                                                          style: GoogleFonts
-                                                              .outfit(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  fontSize:
-                                                                      desktopView
-                                                                          ? 20
-                                                                          : 12,
-                                                                  color: Colors
-                                                                      .black),
-                                                        ),
-                                                      ),
-                                                    ));
-                                                  } else {
-                                                    return ProductItemWidget(
-                                                      tabletView: tabletView,
-                                                      mediumTabletView:
-                                                          mediumTabletView,
-                                                      desktopView: desktopView,
-                                                      isHorizontalList: true,
-                                                      bestSellerFirebaseList:
-                                                          snapshot.data![index],
-                                                      onClickCallBack:
-                                                          handleClick,
-                                                      routeFromHomeScreen: true,
-                                                    );
+                                            MenClothBanner(
+                                              tabletView: tabletView,
+                                              desktopView: desktopView,
+                                              onClickCallBack:
+                                                  _handleClickOnClothSection,
+                                            ),
+                                            const SizedBox(height: 20),
+                                            BestSellersLabel(
+                                                tabletView: tabletView),
+                                            SizedBox(
+                                                height: tabletView ? 50 : 20),
+                                            NotificationListener<
+                                                    ScrollNotification>(
+                                                onNotification:
+                                                    (ScrollNotification
+                                                        scrollInfo) {
+                                                  if (scrollInfo
+                                                      is ScrollStartNotification) {
+                                                    _isUserScrolling = true;
+                                                    _stopAutoScroll();
+                                                  } else if (scrollInfo
+                                                      is ScrollEndNotification) {
+                                                    Future.delayed(
+                                                        const Duration(
+                                                            seconds: 3), () {
+                                                      if (_isUserScrolling) {
+                                                        _isUserScrolling =
+                                                            false;
+                                                        _startAutoScroll();
+                                                      }
+                                                    });
                                                   }
+                                                  return true;
                                                 },
-                                              );
-                                            }
-                                          }),
-                                    )),
-                                SizedBox(height: desktopView ? 30 : 0),
+                                                child: Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Container(
+                                                        height: desktopView
+                                                            ? 510
+                                                            : 450,
+                                                        margin: EdgeInsets.only(
+                                                            left: tabletView
+                                                                ? 60
+                                                                : 10,
+                                                            right: tabletView
+                                                                ? 60
+                                                                : 10),
+                                                        child: FutureBuilder<
+                                                                List<
+                                                                    ProductItemFirebaseModel>>(
+                                                            future:
+                                                                bestSellerFirebaseList,
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return ListView(
+                                                                    scrollDirection:
+                                                                        Axis.horizontal,
+                                                                    children: List.generate(
+                                                                        7,
+                                                                        (index) => Shimmer.fromColors(
+                                                                            baseColor: Colors.grey[300]!,
+                                                                            highlightColor: Colors.grey[100]!,
+                                                                            child: Container(
+                                                                              width: desktopView
+                                                                                  ? 365
+                                                                                  : tabletView
+                                                                                      ? 165
+                                                                                      : 365,
+                                                                              height: desktopView
+                                                                                  ? 620
+                                                                                  : tabletView
+                                                                                      ? 500
+                                                                                      : 620,
+                                                                              color: Colors.grey[300]!,
+                                                                            ))));
+                                                              } else if (snapshot
+                                                                  .hasError) {
+                                                                return Center();
+                                                              } else if (!snapshot
+                                                                      .hasData ||
+                                                                  snapshot.data!
+                                                                      .isEmpty) {
+                                                                return Center();
+                                                              } else {
+                                                                return ListView
+                                                                    .builder(
+                                                                  controller:
+                                                                      _scrollController,
+                                                                  scrollDirection:
+                                                                      Axis.horizontal,
+                                                                  itemCount: snapshot
+                                                                              .data!
+                                                                              .length >=
+                                                                          16
+                                                                      ? 16
+                                                                      : snapshot
+                                                                          .data!
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (context,
+                                                                          index) {
+                                                                    // Check if the current index is 50
+                                                                    if (index ==
+                                                                        15) {
+                                                                      return Center(
+                                                                          child:
+                                                                              InkWell(
+                                                                        onTap:
+                                                                            () =>
+                                                                                {
+                                                                          handleNavigation(
+                                                                              Endpoints.bestSellersList,
+                                                                              'Best Seller')
+                                                                        },
+                                                                        child:
+                                                                            Container(
+                                                                          margin: EdgeInsets.only(
+                                                                              right: desktopView ? 80 : 10,
+                                                                              left: desktopView ? 20 : 5),
+                                                                          height: desktopView
+                                                                              ? 100
+                                                                              : 50,
+                                                                          width: desktopView
+                                                                              ? 150
+                                                                              : 100,
+                                                                          alignment:
+                                                                              Alignment.center,
+                                                                          decoration: BoxDecoration(
+                                                                              borderRadius: BorderRadius.circular(8),
+                                                                              color: Colors.white,
+                                                                              border: Border.all(width: 1, color: Colors.grey)),
+                                                                          child:
+                                                                              Text(
+                                                                            'View more',
+                                                                            style: GoogleFonts.outfit(
+                                                                                fontWeight: FontWeight.bold,
+                                                                                fontSize: desktopView ? 20 : 12,
+                                                                                color: Colors.black),
+                                                                          ),
+                                                                        ),
+                                                                      ));
+                                                                    } else {
+                                                                      return ProductItemWidget(
+                                                                        tabletView:
+                                                                            tabletView,
+                                                                        mediumTabletView:
+                                                                            mediumTabletView,
+                                                                        desktopView:
+                                                                            desktopView,
+                                                                        isHorizontalList:
+                                                                            true,
+                                                                        bestSellerFirebaseList:
+                                                                            snapshot.data![index],
+                                                                        onClickCallBack:
+                                                                            handleClick,
+                                                                        routeFromHomeScreen:
+                                                                            true,
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                );
+                                                              }
+                                                            }),
+                                                      ),
+                                                      desktopView
+                                                          ? Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                              children: [
+                                                                InkWell(
+                                                                    onTap:
+                                                                        _scrollLeftBestSeller,
+                                                                    child:
+                                                                        Container(
+                                                                      alignment:
+                                                                          Alignment
+                                                                              .center,
+                                                                      margin: const EdgeInsets
+                                                                          .only(
+                                                                          left:
+                                                                              15),
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          20),
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                              50),
+                                                                          color: AppColors
+                                                                              .cGreenColor,
+                                                                          border: Border.all(
+                                                                              width: 4,
+                                                                              color: Colors.white)),
+                                                                      child:
+                                                                          const Icon(
+                                                                        Icons
+                                                                            .arrow_back_ios_new,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        size:
+                                                                            40,
+                                                                      ),
+                                                                    )),
+                                                                InkWell(
+                                                                    onTap:
+                                                                        _scrollRightBestSeller,
+                                                                    child:
+                                                                        Container(
+                                                                      alignment:
+                                                                          Alignment
+                                                                              .center,
+                                                                      margin: const EdgeInsets
+                                                                          .only(
+                                                                          right:
+                                                                              15),
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          20),
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                              50),
+                                                                          color: AppColors
+                                                                              .cGreenColor,
+                                                                          border: Border.all(
+                                                                              width: 4,
+                                                                              color: Colors.white)),
+                                                                      child:
+                                                                          const Icon(
+                                                                        Icons
+                                                                            .arrow_forward_ios,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        size:
+                                                                            40,
+                                                                      ),
+                                                                    )),
+                                                              ],
+                                                            )
+                                                          : Container()
+                                                    ])),
+                                            SizedBox(
+                                                height: desktopView ? 30 : 0),
 
-                                bannerImageUrl2.isEmpty
-                                    ? Container()
-                                    : BannerWidget(
-                                        tabletView: tabletView,
-                                        desktopView: desktopView,
-                                        imageUrl: bannerImageUrl2,
-                                      ),
-                                SizedBox(height: 30),
-                                bannerImageUrl.isEmpty
-                                    ? Container()
-                                    : BannerWidget(
-                                        tabletView: tabletView,
-                                        desktopView: desktopView,
-                                        imageUrl: bannerImageUrl,
-                                      ),
-                                SizedBox(height: tabletView ? 50 : 20),
-                                HappyCustomerDividerAndLabel(
-                                    tabletView: tabletView,
-                                    desktopView: desktopView),
-                                SizedBox(height: tabletView ? 50 : 20),
-                                FutureBuilder<List<HappyCustomerFirabaseModel>>(
-                                    future: happyCustomerFirebaseList,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Shimmer.fromColors(
-                                            baseColor: Colors.grey[300]!,
-                                            highlightColor: Colors.grey[100]!,
-                                            child: Container(
-                                              width: desktopView
-                                                  ? 365
-                                                  : tabletView
-                                                      ? 165
-                                                      : 365,
-                                              height: desktopView
-                                                  ? 620
-                                                  : tabletView
-                                                      ? 500
-                                                      : 620,
-                                              color: Colors.grey[300]!,
-                                            ));
-                                      } else if (snapshot.hasError) {
-                                        return Center(
-                                            child: Text(
-                                                'Error: ${snapshot.error}'));
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data!.isEmpty) {
-                                        return const Center(
-                                            child: Text('No data found'));
-                                      } else {
-                                        return HappyCustomerVideoAndGridWidget(
-                                            tabletView: tabletView,
-                                            desktopView: desktopView,
-                                            happyCustomerData:
-                                                snapshot.data ?? [],
-                                            onClickVideo:
-                                                navigateToVideoPlayerScreen,
-                                            playIconWidget:
-                                                playIconWidget(false));
-                                      }
-                                    }),
+                                            bannerImageUrl2.isEmpty
+                                                ? Container()
+                                                : BannerWidget(
+                                                    tabletView: tabletView,
+                                                    desktopView: desktopView,
+                                                    imageUrl: bannerImageUrl2,
+                                                  ),
+                                            SizedBox(height: 30),
+                                            bannerImageUrl.isEmpty
+                                                ? Container()
+                                                : BannerWidget(
+                                                    tabletView: tabletView,
+                                                    desktopView: desktopView,
+                                                    imageUrl: bannerImageUrl,
+                                                  ),
+                                            SizedBox(
+                                                height: tabletView ? 50 : 20),
+                                            HappyCustomerDividerAndLabel(
+                                                tabletView: tabletView,
+                                                desktopView: desktopView),
+                                            SizedBox(
+                                                height: tabletView ? 50 : 20),
+                                            FutureBuilder<
+                                                    List<
+                                                        HappyCustomerFirabaseModel>>(
+                                                future:
+                                                    happyCustomerFirebaseList,
+                                                builder: (context, snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey[300]!,
+                                                        highlightColor:
+                                                            Colors.grey[100]!,
+                                                        child: Container(
+                                                          width: desktopView
+                                                              ? 365
+                                                              : tabletView
+                                                                  ? 165
+                                                                  : 365,
+                                                          height: desktopView
+                                                              ? 620
+                                                              : tabletView
+                                                                  ? 500
+                                                                  : 620,
+                                                          color:
+                                                              Colors.grey[300]!,
+                                                        ));
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Center(
+                                                        child: Text(
+                                                            'Error: ${snapshot.error}'));
+                                                  } else if (!snapshot
+                                                          .hasData ||
+                                                      snapshot.data!.isEmpty) {
+                                                    return const Center(
+                                                        child: Text(
+                                                            'No data found'));
+                                                  } else {
+                                                    return HappyCustomerVideoAndGridWidget(
+                                                        tabletView: tabletView,
+                                                        desktopView:
+                                                            desktopView,
+                                                        happyCustomerData:
+                                                            snapshot.data ?? [],
+                                                        onClickVideo:
+                                                            navigateToVideoPlayerScreen,
+                                                        playIconWidget:
+                                                            playIconWidget(
+                                                                false));
+                                                  }
+                                                }),
 
-                                SizedBox(height: tabletView ? 40 : 20),
-                                MenWomenSectionDividerLabelWidget(
-                                  label: 'Men',
-                                  label2: 'Section',
-                                  margin: EdgeInsets.only(left: 50),
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  tabletView: tabletView,
-                                  routeFromHome: true,
-                                ),
-                                FutureBuilder<List<ProductItemFirebaseModel>>(
-                                    future: menOpticalProductFirebaseList,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Shimmer.fromColors(
-                                            baseColor: Colors.grey[300]!,
-                                            highlightColor: Colors.grey[100]!,
-                                            child: Container(
-                                              width: desktopView
-                                                  ? 365
-                                                  : tabletView
-                                                      ? 165
-                                                      : 365,
-                                              height: desktopView
-                                                  ? 620
-                                                  : tabletView
-                                                      ? 500
-                                                      : 620,
-                                              color: Colors.grey[300]!,
-                                            ));
-                                      } else if (snapshot.hasError) {
-                                        return Center();
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data!.isEmpty) {
-                                        return Center();
-                                      } else {
-                                        return MenSectionGridWidget(
-                                            tabletView: tabletView,
-                                            mediumTabletView: mediumTabletView,
-                                            desktopView: desktopView,
-                                            productFirebaseList:
-                                                snapshot.data ?? [],
-                                            handleClick: handleClick);
-                                      }
-                                    }),
-                                SizedBox(height: tabletView ? 40 : 20),
-                                MenSectionViewMore(
-                                  viewMoreFor: 'Men',
-                                  tabletView: tabletView,
-                                  onViewMoreClick: handleNavigation,
-                                ),
-                                const SizedBox(height: 60),
-                                CategoryLabel(
-                                  tabletView: tabletView,
-                                  label: 'Brands we offer',
-                                ),
-                                BuyBrandedSunglassesBanner(
-                                    tabletView: tabletView),
-                                const SizedBox(height: 20),
-                                MenWomenSectionDividerLabelWidget(
-                                  label: 'Women',
-                                  label2: 'Section',
-                                  margin: EdgeInsets.only(right: 50),
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  tabletView: tabletView,
-                                  routeFromHome: true,
-                                ),
-                                FutureBuilder<List<ProductItemFirebaseModel>>(
-                                    future: womenOpticalProductFirebaseList,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Shimmer.fromColors(
-                                            baseColor: Colors.grey[300]!,
-                                            highlightColor: Colors.grey[100]!,
-                                            child: Container(
-                                              width: desktopView
-                                                  ? 365
-                                                  : tabletView
-                                                      ? 165
-                                                      : 365,
-                                              height: desktopView
-                                                  ? 620
-                                                  : tabletView
-                                                      ? 500
-                                                      : 620,
-                                              color: Colors.grey[300]!,
-                                            ));
-                                      } else if (snapshot.hasError) {
-                                        return Center();
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data!.isEmpty) {
-                                        return Center();
-                                      } else {
-                                        return MenSectionGridWidget(
-                                            tabletView: tabletView,
-                                            mediumTabletView: mediumTabletView,
-                                            desktopView: desktopView,
-                                            productFirebaseList:
-                                                snapshot.data ?? [],
-                                            handleClick: handleClick);
-                                      }
-                                    }),
-                                SizedBox(height: tabletView ? 40 : 20),
-                                MenSectionViewMore(
-                                  viewMoreFor: 'Women',
-                                  tabletView: tabletView,
-                                  onViewMoreClick: handleNavigation,
-                                ),
-                                const SizedBox(height: 20),
-                                AboutJpOpticalWidget(
-                                    tabletView: tabletView,
-                                    mediumTabletView: mediumTabletView,
-                                    mobileView: mobileView,
-                                    desktopView: desktopView,
-                                    onClickVideo: navigateToVideoPlayerScreen,
-                                    playIconWidget:
-                                        playIconWidget(desktopView)),
-                                SizedBox(height: tabletView ? 80 : 30),
-                                // StoreLocationMapWidget(
-                                //     tabletView: tabletView,
-                                //     desktopView: desktopView),
-                                const SizedBox(height: 60),
-                                Footer(
-                                    onClickCallBack:
-                                        handleClickOnFooterWhatsApp),
-                                const SizedBox(height: 20),
-                              ])))
-                ]),
-                dismissCartScreen
-                    ? Container(
-                        margin: EdgeInsets.only(top: mobileView ? 0 : 70),
-                        width: mobileView ? double.infinity : 700,
-                        height: mobileView ? double.infinity : 700,
-                        child: CartScreen(onCloseCallBack: handleCartScreen),
-                      )
-                    : Container()
-              ])
-            : Padding(
-                padding: const EdgeInsets.all(10),
-                child: MyNavigationdrawer(
-                    selectedTab: 'Home',
-                    onClickCallBack: handleNavigationDrawerClick)));
+                                            SizedBox(
+                                                height: tabletView ? 40 : 20),
+                                            MenWomenSectionDividerLabelWidget(
+                                              label: 'Men',
+                                              label2: 'Section',
+                                              margin: EdgeInsets.only(left: 50),
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              tabletView: tabletView,
+                                              routeFromHome: true,
+                                            ),
+                                            FutureBuilder<
+                                                    List<
+                                                        ProductItemFirebaseModel>>(
+                                                future:
+                                                    menOpticalProductFirebaseList,
+                                                builder: (context, snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey[300]!,
+                                                        highlightColor:
+                                                            Colors.grey[100]!,
+                                                        child: Container(
+                                                          width: desktopView
+                                                              ? 365
+                                                              : tabletView
+                                                                  ? 165
+                                                                  : 365,
+                                                          height: desktopView
+                                                              ? 620
+                                                              : tabletView
+                                                                  ? 500
+                                                                  : 620,
+                                                          color:
+                                                              Colors.grey[300]!,
+                                                        ));
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Center();
+                                                  } else if (!snapshot
+                                                          .hasData ||
+                                                      snapshot.data!.isEmpty) {
+                                                    return Center();
+                                                  } else {
+                                                    return MenSectionGridWidget(
+                                                        tabletView: tabletView,
+                                                        mediumTabletView:
+                                                            mediumTabletView,
+                                                        desktopView:
+                                                            desktopView,
+                                                        productFirebaseList:
+                                                            snapshot.data ?? [],
+                                                        handleClick:
+                                                            handleClick);
+                                                  }
+                                                }),
+                                            SizedBox(
+                                                height: tabletView ? 40 : 20),
+                                            MenSectionViewMore(
+                                              viewMoreFor: 'Men',
+                                              tabletView: tabletView,
+                                              onViewMoreClick: handleNavigation,
+                                            ),
+                                            const SizedBox(height: 60),
+                                            CategoryLabel(
+                                              tabletView: tabletView,
+                                              label: 'Brands we offer',
+                                            ),
+                                            BuyBrandedSunglassesBanner(
+                                                tabletView: tabletView),
+                                            const SizedBox(height: 20),
+                                            MenWomenSectionDividerLabelWidget(
+                                              label: 'Women',
+                                              label2: 'Section',
+                                              margin:
+                                                  EdgeInsets.only(right: 50),
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              tabletView: tabletView,
+                                              routeFromHome: true,
+                                            ),
+                                            FutureBuilder<
+                                                    List<
+                                                        ProductItemFirebaseModel>>(
+                                                future:
+                                                    womenOpticalProductFirebaseList,
+                                                builder: (context, snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey[300]!,
+                                                        highlightColor:
+                                                            Colors.grey[100]!,
+                                                        child: Container(
+                                                          width: desktopView
+                                                              ? 365
+                                                              : tabletView
+                                                                  ? 165
+                                                                  : 365,
+                                                          height: desktopView
+                                                              ? 620
+                                                              : tabletView
+                                                                  ? 500
+                                                                  : 620,
+                                                          color:
+                                                              Colors.grey[300]!,
+                                                        ));
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Center();
+                                                  } else if (!snapshot
+                                                          .hasData ||
+                                                      snapshot.data!.isEmpty) {
+                                                    return Center();
+                                                  } else {
+                                                    return MenSectionGridWidget(
+                                                        tabletView: tabletView,
+                                                        mediumTabletView:
+                                                            mediumTabletView,
+                                                        desktopView:
+                                                            desktopView,
+                                                        productFirebaseList:
+                                                            snapshot.data ?? [],
+                                                        handleClick:
+                                                            handleClick);
+                                                  }
+                                                }),
+                                            SizedBox(
+                                                height: tabletView ? 40 : 20),
+                                            MenSectionViewMore(
+                                              viewMoreFor: 'Women',
+                                              tabletView: tabletView,
+                                              onViewMoreClick: handleNavigation,
+                                            ),
+                                            const SizedBox(height: 20),
+                                            AboutJpOpticalWidget(
+                                                tabletView: tabletView,
+                                                mediumTabletView:
+                                                    mediumTabletView,
+                                                mobileView: mobileView,
+                                                desktopView: desktopView,
+                                                onClickVideo:
+                                                    navigateToVideoPlayerScreen,
+                                                playIconWidget: playIconWidget(
+                                                    desktopView)),
+                                            SizedBox(
+                                                height: tabletView ? 80 : 30),
+                                            // StoreLocationMapWidget(
+                                            //     tabletView: tabletView,
+                                            //     desktopView: desktopView),
+                                            const SizedBox(height: 60),
+                                            Footer(
+                                                onClickCallBack:
+                                                    handleClickOnFooterWhatsApp),
+                                            const SizedBox(height: 20),
+                                          ])))
+                            ]),
+                        dismissCartScreen
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(top: mobileView ? 0 : 70),
+                                width: mobileView ? double.infinity : 700,
+                                height: mobileView ? double.infinity : 700,
+                                child: CartScreen(
+                                    onCloseCallBack: handleCartScreen),
+                              )
+                            : Container()
+                      ])
+                    : Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: MyNavigationdrawer(
+                            selectedTab: 'Home',
+                            onClickCallBack: handleNavigationDrawerClick)))));
   }
 }
 
@@ -1656,54 +2035,60 @@ class _HappyCustomerVideoAndGridWidgetState
     }
   }
 
-  late List<FlickManager> flickManagers;
-  late FlickManager flickManager;
+  // late List<FlickManager> flickManagers;
+  // late FlickManager flickManager;
   @override
   void initState() {
     super.initState();
-    flickManagers = widget.happyCustomerData.map((data) {
-      // Create the VideoPlayerController
-      final videoController =
-          VideoPlayerController.network(data.videoUrl ?? '');
+    // flickManagers = widget.happyCustomerData.map((data) {
+    //   // Create the VideoPlayerController
+    //   final videoController =
+    //       VideoPlayerController.network(data.videoUrl ?? '');
 
-      // Create the FlickManager with the videoController
-      final flickManager = FlickManager(
-          videoPlayerController: videoController
-            ..initialize().then((_) {
-              videoController.pause();
-              // for (int i = 0; i < flickManagers.length; i++) {
-              //   _playAndPauseVideo(i);
-              // }
-              videoController.addListener(_onVideoPlayerChanged);
-            }));
+    //   // Create the FlickManager with the videoController
+    //   final flickManager = FlickManager(
+    //       videoPlayerController: videoController
+    //         ..initialize().then((_) {
+    //           setState(() {});
+    //           videoController.pause();
+    //           // for (int i = 0; i < flickManagers.length; i++) {
+    //           //   _playAndPauseVideo(i);
+    //           // }
+    //           // videoController.addListener(_onVideoPlayerChanged);
+    //         }));
 
-      return flickManager;
-    }).toList();
+    //   return flickManager;
+    // }).toList();
   }
 
-  void _playAndPauseVideo(int index) {
-    flickManagers[index].flickVideoManager?.videoPlayerController?.play();
+  // void _playAndPauseVideo(int index) {
+  //   final flickManager = flickManagers[index];
+  //   final videoController =
+  //       flickManager.flickVideoManager?.videoPlayerController;
 
-    // Delay and then pause the video
-    Future.delayed(Duration(milliseconds: 100), () {
-      flickManagers[index].flickVideoManager?.videoPlayerController?.pause();
-    });
-  }
+  //   if (videoController != null && videoController.value.isInitialized) {
+  //     videoController.setVolume(0.0);
+  //     videoController.play(); // Start playback briefly
+  //     Future.delayed(Duration(milliseconds: 100), () {
+  //       videoController.pause(); // Pause after a short delay
+  //     });
+  //   }
+  // }
 
-  void _onVideoPlayerChanged() {
-    final controller = flickManager.flickVideoManager?.videoPlayerController;
-    if (controller != null) {
-      if (controller.value.hasError) {
-        debugPrint("Video player error: ${controller.value.errorDescription}");
-      }
-    }
-  }
+  // void _onVideoPlayerChanged() {
+  //   final controller = flickManager.flickVideoManager?.videoPlayerController;
+  //   if (controller != null) {
+  //     if (controller.value.hasError) {
+  //       debugPrint("Video player error: ${controller.value.errorDescription}");
+  //     }
+  //   }
+  // }
 
   @override
   void dispose() {
-    for (var flickManager in flickManagers) {
-      flickManager.dispose();
-    }
+    // for (var flickManager in flickManagers) {
+    //   flickManager.dispose();
+    // }
     super.dispose();
   }
 
@@ -1722,17 +2107,23 @@ class _HappyCustomerVideoAndGridWidgetState
           Container(
               width: double.infinity,
               height: 250,
-              child: videoUrl.isNotEmpty
-                  ? FlickVideoPlayer(
-                      flickManager: flickManagers[index],
-                      flickVideoWithControls: const FlickVideoWithControls(
-                        videoFit: BoxFit.fill,
-                      ),
-                    )
-                  : Image.network(
-                      thumbnailUrl,
-                      fit: BoxFit.fill,
-                    )),
+              child:
+                  //  videoUrl.isNotEmpty
+                  //     ? FlickVideoPlayer(
+                  //         flickManager: flickManagers[index],
+                  //         flickVideoWithControls: const FlickVideoWithControls(
+                  //           videoFit: BoxFit.fill,
+                  //         ),
+                  //       )
+                  //     :
+                  thumbnailUrl.isNotEmpty
+                      ? Image.network(
+                          thumbnailUrl,
+                          fit: BoxFit.fill,
+                        )
+                      : Container(
+                          color: Colors.black,
+                        )),
           videoUrl.isNotEmpty ? widget.playIconWidget : Container(),
           videoUrl.isEmpty
               ? Container(
@@ -1757,6 +2148,9 @@ class _HappyCustomerVideoAndGridWidgetState
   }
 
   Widget buildGrid(final List<HappyCustomerFirabaseModel> videoDataList) {
+    final itemsToDisplay =
+        videoDataList.length > 18 ? 18 : videoDataList.length;
+    final itemsToRender = itemsToDisplay - 1;
     return ResponsiveGridList(
         horizontalGridSpacing: 0,
         verticalGridSpacing: 0,
@@ -1770,9 +2164,17 @@ class _HappyCustomerVideoAndGridWidgetState
           shrinkWrap: true,
         ),
         children: List.generate(
-            videoDataList.length >= 18 ? 18 : videoDataList.length,
-            (index) => imageContainer(videoDataList[index].videoUrl ?? '',
-                videoDataList[index].thumbnailUrl ?? '', index)));
+          itemsToRender,
+          (index) {
+            // Skip the first item by accessing index + 1
+            final item = videoDataList[index + 1]; // Start at index 1
+            return imageContainer(
+              item.videoUrl ?? '',
+              item.thumbnailUrl ?? '',
+              index + 1, // Pass the adjusted index
+            );
+          },
+        ));
   }
 
   @override
@@ -2197,48 +2599,50 @@ class ReadyToOrderListWidget extends StatefulWidget {
 }
 
 class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
-  late List<FlickManager> flickManagers;
-  late FlickManager flickManager;
+  // late List<FlickManager> flickManagers;
+  // late FlickManager flickManager;
   @override
   void initState() {
     super.initState();
-    flickManagers = widget.happyCustomerData.map((data) {
-      // Create the VideoPlayerController
-      final videoController =
-          VideoPlayerController.network(data.videoUrl ?? '');
+    // flickManagers = widget.happyCustomerData.map((data) {
+    //   // Create the VideoPlayerController
+    //   final videoController =
+    //       VideoPlayerController.network(data.videoUrl ?? '');
 
-      // Create the FlickManager with the videoController
-      final flickManager = FlickManager(
-          videoPlayerController: videoController
-            ..initialize().then((_) {
-              for (int i = 0; i < flickManagers.length; i++) {
-                _playAndPauseVideo(i);
-              }
-            }));
+    //   // Create the FlickManager with the videoController
+    //   final flickManager = FlickManager(
+    //       videoPlayerController: videoController
+    //         ..initialize().then((_) {
+    //           setState(() {});
+    //           videoController.pause();
+    //           // for (int i = 0; i < flickManagers.length; i++) {
+    //           //   _playAndPauseVideo(i);
+    //           // }
+    //         }));
 
-      return flickManager;
-    }).toList();
+    //   return flickManager;
+    // }).toList();
   }
 
-  void _playAndPauseVideo(int index) {
-    final flickManager = flickManagers[index];
-    final videoController =
-        flickManager.flickVideoManager?.videoPlayerController;
+  // void _playAndPauseVideo(int index) {
+  //   final flickManager = flickManagers[index];
+  //   final videoController =
+  //       flickManager.flickVideoManager?.videoPlayerController;
 
-    if (videoController != null && videoController.value.isInitialized) {
-      videoController.setVolume(0.0);
-      videoController.play(); // Start playback briefly
-      Future.delayed(Duration(milliseconds: 100), () {
-        videoController.pause(); // Pause after a short delay
-      });
-    }
-  }
+  //   if (videoController != null && videoController.value.isInitialized) {
+  //     videoController.setVolume(0.0);
+  //     videoController.play(); // Start playback briefly
+  //     Future.delayed(Duration(milliseconds: 100), () {
+  //       videoController.pause(); // Pause after a short delay
+  //     });
+  //   }
+  // }
 
   @override
   void dispose() {
-    for (var flickManager in flickManagers) {
-      flickManager.dispose();
-    }
+    // for (var flickManager in flickManagers) {
+    //   flickManager.dispose();
+    // }
     super.dispose();
   }
 
@@ -2268,18 +2672,24 @@ class _ReadyToOrderListWidgetState extends State<ReadyToOrderListWidget> {
                     index == widget.happyCustomerData.length - 1 ? 0 : 10,
                     0,
                   ),
-                  child: widget.happyCustomerData[index].videoUrl != null
-                      ? FlickVideoPlayer(
-                          flickManager: flickManagers[index],
-                          flickVideoWithControls: const FlickVideoWithControls(
-                            videoFit: BoxFit.fill,
-                            playerLoadingFallback: Center(),
-                          ),
-                        )
-                      : Image.network(
-                          widget.happyCustomerData[index].thumbnailUrl!,
-                          fit: BoxFit.fill,
-                        ),
+                  child:
+                      // widget.happyCustomerData[index].videoUrl != null
+                      //     ? FlickVideoPlayer(
+                      //         flickManager: flickManagers[index],
+                      //         flickVideoWithControls: const FlickVideoWithControls(
+                      //           videoFit: BoxFit.fill,
+                      //           playerLoadingFallback: Center(),
+                      //         ),
+                      //       )
+                      //     :
+                      widget.happyCustomerData[index].thumbnailUrl != null
+                          ? Image.network(
+                              widget.happyCustomerData[index].thumbnailUrl!,
+                              fit: BoxFit.fill,
+                            )
+                          : Container(
+                              color: Colors.black,
+                            ),
                 ),
                 widget.happyCustomerData[index].videoUrl == null
                     ? Container(

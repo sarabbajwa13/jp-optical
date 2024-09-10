@@ -29,7 +29,7 @@ final String imageUrl;
               height: desktopView ? 480 : tabletView ? 320 : 180,
               child: Image.network(
                 imageUrl,
-                fit: BoxFit.cover,
+                fit: BoxFit.fill,
               )),
         ],
       ),

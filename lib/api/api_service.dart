@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:jp_optical/constants/endpoints.dart';
-import 'package:jp_optical/models/banner_carousel_model.dart'; 
+import 'package:jp_optical/models/banner_carousel_model.dart';
 import 'package:jp_optical/models/happy_customer_firebase_model.dart';
 import 'package:jp_optical/models/product_category_model.dart';
 import 'package:jp_optical/models/product_item_firebase_model.dart';
 
 class ApiService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
- 
+
   Future<List<HappyCustomerFirabaseModel>>
       fetchHappyCustomerListFromFirebase() async {
     QuerySnapshot querySnapshot =
@@ -28,14 +28,14 @@ class ApiService {
         .toList();
   }
 
-  // Future<List<HappyCustomerFirabaseModel>>
-  //     fetchReadyToOrderListFromFirebase() async {
-  //   QuerySnapshot querySnapshot =
-  //       await _firestore.collection(Endpoints.readyToOrderList).get();
-  //   return querySnapshot.docs
-  //       .map((doc) => HappyCustomerFirabaseModel.fromDocument(doc))
-  //       .toList();
-  // }
+  Future<List<HappyCustomerFirabaseModel>>
+      fetchReadyToOrderListFromFirebase1() async {
+    QuerySnapshot querySnapshot =
+        await _firestore.collection(Endpoints.readyToOrderList).get();
+    return querySnapshot.docs
+        .map((doc) => HappyCustomerFirabaseModel.fromDocument(doc))
+        .toList();
+  }
 
   Future<List<ProductItemFirebaseModel>>
       fetchMenOpticalProductListFromFirebase() async {
@@ -44,6 +44,32 @@ class ApiService {
     return querySnapshot.docs
         .map((doc) => ProductItemFirebaseModel.fromDocument(doc))
         .toList();
+  }
+
+  Future<Map<String, dynamic>> fetchMenOpticalProductListFromFirebase1({
+    DocumentSnapshot? lastDoc,
+    int limit = 10,
+  }) async {
+    Query query = _firestore
+        .collection(Endpoints.menOpticalProductList)
+        .orderBy('createdBy', descending: true)
+        .limit(limit);
+
+    if (lastDoc != null) {
+      query = query.startAfterDocument(lastDoc);
+    }
+
+    // Execute the query and get the snapshot
+    QuerySnapshot querySnapshot = await query.get();
+
+    // Convert the snapshot to a Map<String, dynamic>
+    Map<String, dynamic> result = {
+      'products': querySnapshot.docs.map((doc) => doc.data()).toList(),
+      'lastDoc': querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null,
+    };
+
+    // Return the result
+    return result;
   }
 
   Future<List<ProductItemFirebaseModel>>
@@ -73,7 +99,10 @@ class ApiService {
         .toList();
   }
 
-  Future<Map<String, dynamic>> fetchProductListFromFirebase1({required String collectionName, DocumentSnapshot? lastDoc, int limit = 10}) async {
+  Future<Map<String, dynamic>> fetchProductListFromFirebase1(
+      {required String collectionName,
+      DocumentSnapshot? lastDoc,
+      int limit = 10}) async {
     Query query = _firestore
         .collection(collectionName)
         .orderBy('createdBy', descending: true)
@@ -87,7 +116,8 @@ class ApiService {
     List<ProductItemFirebaseModel> products = querySnapshot.docs
         .map((doc) => ProductItemFirebaseModel.fromDocument(doc))
         .toList();
-    DocumentSnapshot? lastDocument = querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+    DocumentSnapshot? lastDocument =
+        querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
     return {
       'products': products,
@@ -95,7 +125,10 @@ class ApiService {
     };
   }
 
-Future<Map<String, dynamic>> fetchReadyToOrderListFromFirebase({required String collectionName, DocumentSnapshot? lastDoc, int limit = 10}) async {
+  Future<Map<String, dynamic>> fetchReadyToOrderListFromFirebase(
+      {required String collectionName,
+      DocumentSnapshot? lastDoc,
+      int limit = 10}) async {
     Query query = _firestore
         .collection(collectionName)
         .orderBy('createdBy', descending: true)
@@ -109,7 +142,8 @@ Future<Map<String, dynamic>> fetchReadyToOrderListFromFirebase({required String 
     List<HappyCustomerFirabaseModel> products = querySnapshot.docs
         .map((doc) => HappyCustomerFirabaseModel.fromDocument(doc))
         .toList();
-    DocumentSnapshot? lastDocument = querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+    DocumentSnapshot? lastDocument =
+        querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
     return {
       'products': products,

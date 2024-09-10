@@ -35,20 +35,24 @@ class ProductItemFirebaseModel {
     };
   }
 
-  factory ProductItemFirebaseModel.fromMap(Map<String, dynamic> map) {
+factory ProductItemFirebaseModel.fromMap(Map<String, dynamic> map) {
+    // Debug: Print the map to check its contents
+    print('ProductItemFirebaseModel map: $map');
+
     return ProductItemFirebaseModel(
-      productId: map['productId'],
-      productImage: map['productImage'],
-      productTitle: map['productTitle'],
-      createdBy: Timestamp.fromDate(DateTime.parse(map['createdBy'])),
+      productId: map['productId'] ?? '',  // Default to empty string if null
+      productImage: map['productImage'] ?? '',  // Default to empty string if null
+      productTitle: map['productTitle'] ?? '',  // Default to empty string if null
+      createdBy: map['createdBy'] is Timestamp 
+          ? map['createdBy'] as Timestamp
+          : Timestamp.now(),  // Handle Timestamp directly
       size: map['size'] != null 
-          ? List<String>.from(map['size']) 
-          : null, 
-      quantity: map['quantity'] ?? 1,
-      selectedSize: map['selectedSize'],  // Add this line
+          ? List<String>.from(map['size'])
+          : null,
+      quantity: map['quantity'] ?? 1,  // Default to 1 if null
+      selectedSize: map['selectedSize'],  // This can be null
     );
   }
-
   factory ProductItemFirebaseModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;  
     return ProductItemFirebaseModel(
@@ -56,7 +60,9 @@ class ProductItemFirebaseModel {
       productImage: data['productImage'] ?? '',
       productTitle: data['productTitle'] ?? '',
       productDesc: data['productDesc'] ?? '',
-      createdBy: data['createdBy'] as Timestamp,
+      createdBy: data['createdBy'] != null
+        ? data['createdBy'] as Timestamp
+        : Timestamp.now(),
       size: data.containsKey('size') && data['size'] != null
           ? List<String>.from(data['size'])
           : null,  

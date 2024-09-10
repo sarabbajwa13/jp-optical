@@ -125,6 +125,10 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
   void handleNavigationDrawerClick(String action) {
     setState(() {
       switch (action) {
+        case 'Home':
+          showNavigationDrawer = false;
+          _navigateToHomeScreen();
+          break;
         case 'Close':
           showNavigationDrawer = false;
           break;
@@ -281,6 +285,9 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
         break;
       case 'cart':
         if (!dismissCartScreen) {
+          setState(() {
+            updateCartIcon = true;
+          });
           showAnimatedDialog(context, data, 'Add to cart');
         }
         break;
@@ -294,7 +301,9 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
     }
   }
 
-  bool showNavigationDrawer = false, dismissCartScreen = false;
+  bool showNavigationDrawer = false,
+      dismissCartScreen = false,
+      updateCartIcon = false;
   void handleOnClickHamburger(String action) {
     setState(() {
       if (action == 'show_drawer') {
@@ -322,245 +331,272 @@ class _ClothCateogryListScreenState extends State<ClothCateogryListScreen> {
     var desktopView = screenSize.width > 1300;
     return WillPopScope(
         onWillPop: () async {
-          _navigateToHomeScreen();
-          return false;
+          // _navigateToHomeScreen();
+          if (dismissCartScreen) {
+            setState(() {
+              dismissCartScreen = false;
+            });
+            return false;
+          } else {
+            Navigator.of(context).pop();
+            return true;
+          }
         },
-        child: Scaffold(
-            body: !showNavigationDrawer
-                ? Stack(alignment: Alignment.topRight, children: [
-                    Column(
-                      children: [
-                        Header(
-                            onClickHamburger: handleOnClickHamburger,
-                            showCart: true,
-                            showBackArrow: true,
-                            routeFromHome: false),
-                        Container(
-                            height: 60,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: FutureBuilder<
-                                    List<ProductCategoryFirebaseModel>>(
-                                future: categoryListFromFirebase,
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return ListView(
-                                        scrollDirection: Axis.horizontal,
-                                        children: List.generate(
-                                            7,
-                                            (index) => Shimmer.fromColors(
-                                                baseColor: Colors.grey[300]!,
-                                                highlightColor:
-                                                    Colors.grey[100]!,
-                                                child: Container(
-                                                  width: desktopView
-                                                      ? 365
-                                                      : tabletView
-                                                          ? 165
-                                                          : 365,
-                                                  height: desktopView
-                                                      ? 620
-                                                      : tabletView
-                                                          ? 500
-                                                          : 620,
-                                                  color: Colors.grey[300]!,
-                                                ))));
-                                  } else if (snapshot.hasError) {
-                                    return Center();
-                                  } else if (!snapshot.hasData ||
-                                      snapshot.data!.isEmpty) {
-                                    return Center();
-                                  } else {
-                                    return ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: snapshot.data!.length,
-                                        itemBuilder: (context, index) {
-                                          final category =
-                                              snapshot.data![index];
-                                          final isSelected = selectedCategory ==
-                                              category.productListName;
+        child: SafeArea(
+            child: Scaffold(
+                body: !showNavigationDrawer
+                    ? Stack(alignment: Alignment.topRight, children: [
+                        Column(
+                          children: [
+                            updateCartIcon
+                                ? Header(
+                                    onClickHamburger: handleOnClickHamburger,
+                                    showCart: true,
+                                    showBackArrow: true,
+                                    routeFromHome: false)
+                                : Header(
+                                    onClickHamburger: handleOnClickHamburger,
+                                    showCart: true,
+                                    showBackArrow: true,
+                                    routeFromHome: false),
+                            Container(
+                                height: 60,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                child: FutureBuilder<
+                                        List<ProductCategoryFirebaseModel>>(
+                                    future: categoryListFromFirebase,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return ListView(
+                                            scrollDirection: Axis.horizontal,
+                                            children: List.generate(
+                                                7,
+                                                (index) => Shimmer.fromColors(
+                                                    baseColor:
+                                                        Colors.grey[300]!,
+                                                    highlightColor:
+                                                        Colors.grey[100]!,
+                                                    child: Container(
+                                                      width: desktopView
+                                                          ? 365
+                                                          : tabletView
+                                                              ? 165
+                                                              : 365,
+                                                      height: desktopView
+                                                          ? 620
+                                                          : tabletView
+                                                              ? 500
+                                                              : 620,
+                                                      color: Colors.grey[300]!,
+                                                    ))));
+                                      } else if (snapshot.hasError) {
+                                        return Center();
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return Center();
+                                      } else {
+                                        return ListView.builder(
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount: snapshot.data!.length,
+                                            itemBuilder: (context, index) {
+                                              final category =
+                                                  snapshot.data![index];
+                                              final isSelected =
+                                                  selectedCategory ==
+                                                      category.productListName;
 
-                                          return InkWell(
-                                              splashColor: Colors
-                                                  .transparent, // Removes the splash color
-                                              highlightColor: Colors
-                                                  .transparent, // Removes the highlight color
-                                              radius:
-                                                  0, // Optionally adjust the radius if needed
+                                              return InkWell(
+                                                  splashColor: Colors
+                                                      .transparent, // Removes the splash color
+                                                  highlightColor: Colors
+                                                      .transparent, // Removes the highlight color
+                                                  radius:
+                                                      0, // Optionally adjust the radius if needed
 
-                                              onTap: () => {
-                                                    if (!isSelected)
-                                                      {
-                                                        setState(() {
-                                                          selectedCategory =
-                                                              category
-                                                                  .productListName;
-                                                          updatedCollectionName =
-                                                              category
-                                                                  .productListName;
-                                                          _products.clear();
-                                                          _lastDoc = null;
-                                                          _isLoading = false;
-                                                          _hasMore = true;
-                                                        }),
-                                                        _fetchProducts(category
-                                                            .productListName)
-                                                      }
-                                                  },
-                                              child: Container(
-                                                  margin: EdgeInsets.only(
-                                                      left: 20,
-                                                      right: index ==
-                                                              snapshot.data!.length -
-                                                                  1
-                                                          ? 20
-                                                          : 0),
-                                                  padding: EdgeInsets.only(
-                                                      left:
-                                                          desktopView ? 25 : 15,
-                                                      right:
-                                                          desktopView ? 25 : 15,
-                                                      top: 5,
-                                                      bottom: 5),
-                                                  decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              50),
-                                                      border: Border.all(
-                                                          width: isSelected
-                                                              ? 2.5
-                                                              : 1,
-                                                          color: isSelected
-                                                              ? AppColors
-                                                                  .cGreenColor
-                                                              : Colors.grey),
-                                                      color: Colors.white),
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Image.network(
-                                                        snapshot.data![index]
-                                                            .productImage,
-                                                        width: 35,
-                                                        height: 50,
-                                                        fit: BoxFit.fill,
-                                                      ),
-                                                      const SizedBox(
-                                                        width: 10,
-                                                      ),
-                                                      Text(
-                                                        snapshot.data![index]
-                                                            .productTitle,
-                                                        style:
-                                                            GoogleFonts.outfit(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: Colors
-                                                                    .black),
-                                                      ),
-                                                    ],
-                                                  )));
-                                        });
-                                  }
-                                })),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            controller: _scrollController,
-                            physics: dismissCartScreen
-                                ? NeverScrollableScrollPhysics()
-                                : null,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  margin: EdgeInsets.only(
-                                    left: tabletView ? 40 : 10,
-                                    right: tabletView ? 40 : 10,
-                                  ),
-                                  child: _products.isEmpty
-                                      ? _isLoading
-                                          ? const Center(
-                                              child: CircularProgressIndicator(
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                              Color>(
-                                                          AppColors
-                                                              .cGreenColor)))
-                                          : const Center(
-                                              child: Text('No data found'))
-                                      : ResponsiveGridList(
-                                          horizontalGridSpacing: 5,
-                                          verticalGridSpacing: 5,
-                                          horizontalGridMargin: 5,
-                                          verticalGridMargin: 5,
-                                          minItemWidth: 600,
-                                          minItemsPerRow: desktopView
-                                              ? 3
-                                              : tabletView
-                                                  ? 2
-                                                  : 1,
-                                          maxItemsPerRow: 3,
-                                          listViewBuilderOptions:
-                                              ListViewBuilderOptions(
-                                            physics:
-                                                const NeverScrollableScrollPhysics(),
-                                            shrinkWrap: true,
-                                          ),
-                                          children: List.generate(
-                                            _products.length +
-                                                (_hasMore ? 1 : 0),
-                                            (index) {
-                                              if (index == _products.length) {
-                                                return const Center(
-                                                    child: CircularProgressIndicator(
-                                                        valueColor:
-                                                            AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                                AppColors
-                                                                    .cGreenColor)));
-                                              }
-                                              return ProductItemWidget(
-                                                tabletView: tabletView,
-                                                mediumTabletView:
-                                                    mediumTabletView,
-                                                desktopView: desktopView,
-                                                isHorizontalList: false,
-                                                bestSellerFirebaseList:
-                                                    _products[index],
-                                                onClickCallBack: handleClick,
-                                                routeFromHomeScreen: false,
-                                              );
-                                            },
-                                          ),
-                                        ),
+                                                  onTap: () => {
+                                                        if (!isSelected)
+                                                          {
+                                                            setState(() {
+                                                              selectedCategory =
+                                                                  category
+                                                                      .productListName;
+                                                              updatedCollectionName =
+                                                                  category
+                                                                      .productListName;
+                                                              _products.clear();
+                                                              _lastDoc = null;
+                                                              _isLoading =
+                                                                  false;
+                                                              _hasMore = true;
+                                                            }),
+                                                            _fetchProducts(category
+                                                                .productListName)
+                                                          }
+                                                      },
+                                                  child: Container(
+                                                      margin: EdgeInsets.only(
+                                                          left: 20,
+                                                          right: index ==
+                                                                  snapshot.data!
+                                                                          .length -
+                                                                      1
+                                                              ? 20
+                                                              : 0),
+                                                      padding: EdgeInsets.only(
+                                                          left: desktopView
+                                                              ? 25
+                                                              : 15,
+                                                          right: desktopView
+                                                              ? 25
+                                                              : 15,
+                                                          top: 5,
+                                                          bottom: 5),
+                                                      decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  50),
+                                                          border: Border.all(
+                                                              width: isSelected
+                                                                  ? 2.5
+                                                                  : 1,
+                                                              color: isSelected
+                                                                  ? AppColors
+                                                                      .cGreenColor
+                                                                  : Colors.grey),
+                                                          color: Colors.white),
+                                                      child: Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Image.network(
+                                                            snapshot
+                                                                .data![index]
+                                                                .productImage,
+                                                            width: 35,
+                                                            height: 50,
+                                                            fit: BoxFit.fill,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 10,
+                                                          ),
+                                                          Text(
+                                                            snapshot
+                                                                .data![index]
+                                                                .productTitle,
+                                                            style: GoogleFonts
+                                                                .outfit(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Colors
+                                                                        .black),
+                                                          ),
+                                                        ],
+                                                      )));
+                                            });
+                                      }
+                                    })),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                physics: dismissCartScreen
+                                    ? NeverScrollableScrollPhysics()
+                                    : null,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      margin: EdgeInsets.only(
+                                        left: tabletView ? 40 : 10,
+                                        right: tabletView ? 40 : 10,
+                                      ),
+                                      child: _products.isEmpty
+                                          ? _isLoading
+                                              ? const Center(
+                                                  child: CircularProgressIndicator(
+                                                      valueColor:
+                                                          AlwaysStoppedAnimation<
+                                                                  Color>(
+                                                              AppColors
+                                                                  .cGreenColor)))
+                                              : const Center(
+                                                  child: Text('No data found'))
+                                          : ResponsiveGridList(
+                                              horizontalGridSpacing: 5,
+                                              verticalGridSpacing: 5,
+                                              horizontalGridMargin: 5,
+                                              verticalGridMargin: 5,
+                                              minItemWidth: 600,
+                                              minItemsPerRow: desktopView
+                                                  ? 3
+                                                  : tabletView
+                                                      ? 2
+                                                      : 1,
+                                              maxItemsPerRow: 3,
+                                              listViewBuilderOptions:
+                                                  ListViewBuilderOptions(
+                                                physics:
+                                                    const NeverScrollableScrollPhysics(),
+                                                shrinkWrap: true,
+                                              ),
+                                              children: List.generate(
+                                                _products.length +
+                                                    (_hasMore ? 1 : 0),
+                                                (index) {
+                                                  if (index ==
+                                                      _products.length) {
+                                                    return const Center(
+                                                        child: CircularProgressIndicator(
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                        Color>(
+                                                                    AppColors
+                                                                        .cGreenColor)));
+                                                  }
+                                                  return ProductItemWidget(
+                                                    tabletView: tabletView,
+                                                    mediumTabletView:
+                                                        mediumTabletView,
+                                                    desktopView: desktopView,
+                                                    isHorizontalList: false,
+                                                    bestSellerFirebaseList:
+                                                        _products[index],
+                                                    onClickCallBack:
+                                                        handleClick,
+                                                    routeFromHomeScreen: false,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                    ),
+                                    const SizedBox(
+                                      height: 50,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(
-                                  height: 50,
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                    dismissCartScreen
-                        ? Container(
-                            margin: EdgeInsets.only(top: mobileView ? 0 : 70),
-                            width: mobileView ? double.infinity : 700,
-                            height: mobileView ? double.infinity : 700,
-                            child:
-                                CartScreen(onCloseCallBack: handleCartScreen),
-                          )
-                        : Container(),
-                  ])
-                : Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: MyNavigationdrawer(
-                        selectedTab: 'Men cloths',
-                        onClickCallBack: handleNavigationDrawerClick))));
+                        dismissCartScreen
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(top: mobileView ? 0 : 70),
+                                width: mobileView ? double.infinity : 700,
+                                height: mobileView ? double.infinity : 700,
+                                child: CartScreen(
+                                    onCloseCallBack: handleCartScreen),
+                              )
+                            : Container(),
+                      ])
+                    : Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: MyNavigationdrawer(
+                            selectedTab: 'Men cloths',
+                            onClickCallBack: handleNavigationDrawerClick)))));
   }
 }

@@ -89,6 +89,7 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
           }
         },
         style: ElevatedButton.styleFrom(
+          alignment: Alignment.center,
           padding: EdgeInsets.only(
               left: widget.desktopView ? 30 : 5,
               right: widget.desktopView ? 30 : 5,
@@ -104,6 +105,7 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
           ),
         ),
         child: Text(
+          textAlign: TextAlign.center,
           maxLines: 1,
           label,
           style: GoogleFonts.outfit(
@@ -220,15 +222,14 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
                       margin:
                           EdgeInsets.only(top: widget.desktopView ? 30 : 10),
                       child: FadeInImage.assetNetwork(
-                        placeholder:
-                            'assets/images/loading.gif', 
+                        placeholder: 'assets/images/loading.gif',
                         image: widget.bestSellerFirebaseList.productImage,
                         fit: BoxFit.fill,
                         fadeInDuration: Duration(milliseconds: 300),
                       ),
                     ),
                   ),
-                   Container(
+                  Container(
                     alignment: Alignment.center,
                     margin: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
@@ -237,28 +238,29 @@ class _ProductItemWidgetState extends State<ProductItemWidget> {
                       widget.bestSellerFirebaseList.productTitle,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w600 ,
+                        fontWeight: FontWeight.w600,
                         fontSize: widget.tabletView ? 16 : 12,
                         color: Colors.black,
                       ),
                     ),
                   ),
-                  widget.bestSellerFirebaseList.productDesc!.isNotEmpty ?
-                  Container(
-                     alignment: Alignment.center,
-                     margin: const EdgeInsets.only(bottom: 20),
-                    child: Text(
-                      maxLines: 4,
-                      textAlign: TextAlign.start,
-                      widget.bestSellerFirebaseList.productDesc!,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.normal,
-                        fontSize: widget.tabletView ? 16 : 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ) : Container(),
+                  widget.bestSellerFirebaseList.productDesc!.isNotEmpty
+                      ? Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          child: Text(
+                            maxLines: 4,
+                            textAlign: TextAlign.start,
+                            widget.bestSellerFirebaseList.productDesc!,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.normal,
+                              fontSize: widget.tabletView ? 16 : 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        )
+                      : Container(),
                   widget.bestSellerFirebaseList.size != null
                       ? Container(
                           margin: const EdgeInsets.symmetric(vertical: 10),

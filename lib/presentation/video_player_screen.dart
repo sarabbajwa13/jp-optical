@@ -68,7 +68,8 @@ _navigateToHomeScreen() {
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
-          _navigateToHomeScreen();
+          // _navigateToHomeScreen();
+          Navigator.of(context).pop();
           return false;
         },child:Scaffold(
       body: Center(

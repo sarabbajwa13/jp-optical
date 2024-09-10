@@ -44,7 +44,7 @@ class _ProductlistscreenState extends State<Productlistscreen> {
   bool _hasMore = true;
   bool isMenTabSelected = true;
   bool isWomenTabSelected = false;
-  bool showNavigationDrawer = false, dismissCartScreen = false;
+  bool showNavigationDrawer = false, dismissCartScreen = false, updateCartIcon = false;
   void handleOnClickHamburger(String action) {
     setState(() {
       if (action == 'show_drawer') {
@@ -270,6 +270,9 @@ class _ProductlistscreenState extends State<Productlistscreen> {
     switch (action) {
       case 'cart':
         if (!dismissCartScreen) {
+          setState(() {
+            updateCartIcon = true;
+          });
           showAnimatedDialog(context, data, 'Add to cart');
         }
         break;
@@ -349,206 +352,228 @@ class _ProductlistscreenState extends State<Productlistscreen> {
 
     return WillPopScope(
         onWillPop: () async {
-          _navigateToHomeScreen();
-          return false;
+          // _navigateToHomeScreen();
+          if (dismissCartScreen) {
+            setState(() {
+              dismissCartScreen = false;
+            });
+            return false;
+          } else {
+            Navigator.of(context).pop();
+            return true;
+          }
+ 
         },
-        child: Scaffold(
-            body: !showNavigationDrawer
-                ? Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/app_bg.png',
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                      Column(
+        child: SafeArea(
+            child: Scaffold(
+                body: !showNavigationDrawer
+                    ? Stack(
+                        alignment: Alignment.topRight,
                         children: [
-                          Header(
-                              onClickHamburger: handleOnClickHamburger,
-                              showCart: true,
-                              showBackArrow: true,
-                              routeFromHome: false),
-                          ['Bag', 'Watch'].contains(widget.routeFrom)
-                              ? Row(
-                                  children: [
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            if (!isMenTabSelected) {
-                                              updatedCollectionName =
-                                                  widget.firebaeCollectionName ==
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/app_bg.png',
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          Column(
+                            children: [
+                              updateCartIcon ? 
+                              Header(
+                                  onClickHamburger: handleOnClickHamburger,
+                                  showCart: true,
+                                  showBackArrow: true,
+                                  routeFromHome: false) : Header(
+                                  onClickHamburger: handleOnClickHamburger,
+                                  showCart: true,
+                                  showBackArrow: true,
+                                  routeFromHome: false),
+                              ['Bag', 'Watch'].contains(widget.routeFrom)
+                                  ? Row(
+                                      children: [
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                if (!isMenTabSelected) {
+                                                  updatedCollectionName = widget
+                                                              .firebaeCollectionName ==
                                                           Endpoints
                                                               .menBagProductList
                                                       ? Endpoints
                                                           .menBagProductList
                                                       : Endpoints
                                                           .menWatchProductList;
-                                              _products.clear();
-                                              _lastDoc = null;
-                                              _isLoading = false;
-                                              _hasMore = true;
-                                              _fetchProducts(
-                                                  widget.firebaeCollectionName ==
+                                                  _products.clear();
+                                                  _lastDoc = null;
+                                                  _isLoading = false;
+                                                  _hasMore = true;
+                                                  _fetchProducts(widget
+                                                              .firebaeCollectionName ==
                                                           Endpoints
                                                               .menBagProductList
                                                       ? Endpoints
                                                           .menBagProductList
                                                       : Endpoints
                                                           .menWatchProductList);
-                                              isMenTabSelected = true;
-                                              isWomenTabSelected = false;
-                                            }
-                                          });
-                                        },
-                                        child: menButtonWidget(tabletView),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            if (!isWomenTabSelected) {
-                                              updatedCollectionName =
-                                                  widget.firebaeCollectionName ==
+                                                  isMenTabSelected = true;
+                                                  isWomenTabSelected = false;
+                                                }
+                                              });
+                                            },
+                                            child: menButtonWidget(tabletView),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                if (!isWomenTabSelected) {
+                                                  updatedCollectionName = widget
+                                                              .firebaeCollectionName ==
                                                           Endpoints
                                                               .menBagProductList
                                                       ? Endpoints
                                                           .womenBagProductList
                                                       : Endpoints
                                                           .womenWatchProductList;
-                                              _products.clear();
-                                              _lastDoc = null;
-                                              _isLoading = false;
-                                              _hasMore = true;
-                                              _fetchProducts(
-                                                  widget.firebaeCollectionName ==
+                                                  _products.clear();
+                                                  _lastDoc = null;
+                                                  _isLoading = false;
+                                                  _hasMore = true;
+                                                  _fetchProducts(widget
+                                                              .firebaeCollectionName ==
                                                           Endpoints
                                                               .menBagProductList
                                                       ? Endpoints
                                                           .womenBagProductList
                                                       : Endpoints
                                                           .womenWatchProductList);
-                                              isMenTabSelected = false;
-                                              isWomenTabSelected = true;
-                                            }
-                                          });
-                                        },
-                                        child: womenButtonWidget(tabletView),
+                                                  isMenTabSelected = false;
+                                                  isWomenTabSelected = true;
+                                                }
+                                              });
+                                            },
+                                            child:
+                                                womenButtonWidget(tabletView),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Container(),
+                              const SizedBox(height: 10),
+                              MenWomenSectionDividerLabelWidget(
+                                label: '${widget.routeFrom} ',
+                                label2: 'Section',
+                                margin: const EdgeInsets.only(left: 50),
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                tabletView: tabletView,
+                                routeFromHome: false,
+                              ),
+                              const SizedBox(height: 15),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  controller: _scrollController,
+                                  physics: dismissCartScreen
+                                      ? NeverScrollableScrollPhysics()
+                                      : null,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        margin: EdgeInsets.only(
+                                          left: tabletView ? 40 : 10,
+                                          right: tabletView ? 40 : 10,
+                                        ),
+                                        child: _products.isEmpty
+                                            ? _isLoading
+                                                ? const Center(
+                                                    child: CircularProgressIndicator(
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                                AppColors
+                                                                    .cGreenColor)))
+                                                : const Center(
+                                                    child:
+                                                        Text('No data found'))
+                                            : ResponsiveGridList(
+                                                horizontalGridSpacing: 5,
+                                                verticalGridSpacing: 5,
+                                                horizontalGridMargin: 5,
+                                                verticalGridMargin: 5,
+                                                minItemWidth: 600,
+                                                minItemsPerRow: desktopView
+                                                    ? 3
+                                                    : tabletView
+                                                        ? 2
+                                                        : 1,
+                                                maxItemsPerRow: 3,
+                                                listViewBuilderOptions:
+                                                    ListViewBuilderOptions(
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  shrinkWrap: true,
+                                                ),
+                                                children: List.generate(
+                                                  _products.length +
+                                                      (_hasMore ? 1 : 0),
+                                                  (index) {
+                                                    if (index ==
+                                                        _products.length) {
+                                                      return const Center(
+                                                          child: CircularProgressIndicator(
+                                                              valueColor:
+                                                                  AlwaysStoppedAnimation<
+                                                                          Color>(
+                                                                      AppColors
+                                                                          .cGreenColor)));
+                                                    }
+                                                    return ProductItemWidget(
+                                                      tabletView: tabletView,
+                                                      mediumTabletView:
+                                                          mediumTabletView,
+                                                      desktopView: desktopView,
+                                                      isHorizontalList: false,
+                                                      bestSellerFirebaseList:
+                                                          _products[index],
+                                                      onClickCallBack:
+                                                          handleClick,
+                                                      routeFromHomeScreen:
+                                                          false,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(
+                                        height: 50,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          dismissCartScreen
+                              ? Container(
+                                  margin:
+                                      EdgeInsets.only(top: mobileView ? 0 : 70),
+                                  width: mobileView ? double.infinity : 700,
+                                  height: mobileView ? double.infinity : 700,
+                                  child: CartScreen(
+                                      onCloseCallBack: handleCartScreen),
                                 )
                               : Container(),
-                          const SizedBox(height: 10),
-                          MenWomenSectionDividerLabelWidget(
-                            label: '${widget.routeFrom} ',
-                            label2: 'Section',
-                            margin: const EdgeInsets.only(left: 50),
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            tabletView: tabletView,
-                            routeFromHome: false,
-                          ),
-                          const SizedBox(height: 15),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              controller: _scrollController,
-                              physics: dismissCartScreen
-                                  ? NeverScrollableScrollPhysics()
-                                  : null,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    margin: EdgeInsets.only(
-                                      left: tabletView ? 40 : 10,
-                                      right: tabletView ? 40 : 10,
-                                    ),
-                                    child: _products.isEmpty
-                                        ? _isLoading
-                                            ? const Center(
-                                                child: CircularProgressIndicator(
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                                Color>(
-                                                            AppColors
-                                                                .cGreenColor)))
-                                            : const Center(
-                                                child: Text('No data found'))
-                                        : ResponsiveGridList(
-                                            horizontalGridSpacing: 5,
-                                            verticalGridSpacing: 5,
-                                            horizontalGridMargin: 5,
-                                            verticalGridMargin: 5,
-                                            minItemWidth: 600,
-                                            minItemsPerRow: desktopView
-                                                ? 3
-                                                : tabletView
-                                                    ? 2
-                                                    : 1,
-                                            maxItemsPerRow: 3,
-                                            listViewBuilderOptions:
-                                                ListViewBuilderOptions(
-                                              physics:
-                                                  const NeverScrollableScrollPhysics(),
-                                              shrinkWrap: true,
-                                            ),
-                                            children: List.generate(
-                                              _products.length +
-                                                  (_hasMore ? 1 : 0),
-                                              (index) {
-                                                if (index == _products.length) {
-                                                  return const Center(
-                                                      child: CircularProgressIndicator(
-                                                          valueColor:
-                                                              AlwaysStoppedAnimation<
-                                                                      Color>(
-                                                                  AppColors
-                                                                      .cGreenColor)));
-                                                }
-                                                return ProductItemWidget(
-                                                  tabletView: tabletView,
-                                                  mediumTabletView:
-                                                      mediumTabletView,
-                                                  desktopView: desktopView,
-                                                  isHorizontalList: false,
-                                                  bestSellerFirebaseList:
-                                                      _products[index],
-                                                  onClickCallBack: handleClick,
-                                                  routeFromHomeScreen: false,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                  ),
-                                  const SizedBox(
-                                    height: 50,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
-                      ),
-                      dismissCartScreen
-                          ? Container(
-                              margin: EdgeInsets.only(top: mobileView ? 0 : 70),
-                              width: mobileView ? double.infinity : 700,
-                              height: mobileView ? double.infinity : 700,
-                              child:
-                                  CartScreen(onCloseCallBack: handleCartScreen),
-                            )
-                          : Container(),
-                    ],
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: MyNavigationdrawer(
-                        selectedTab: widget.routeFrom,
-                        onClickCallBack: handleNavigationDrawerClick))));
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: MyNavigationdrawer(
+                            selectedTab: widget.routeFrom,
+                            onClickCallBack: handleNavigationDrawerClick)))));
   }
 }

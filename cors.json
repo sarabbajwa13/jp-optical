@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["https://jpopticals.in", "https://www.jpopticals.in"],
+    "origin": ["https://jpopticals.in", "https://www.jpopticals.in", "https://rj-brothers-e9d57--testing-qht7jvin.web.app"],
     "method": ["GET"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "Authorization"]
